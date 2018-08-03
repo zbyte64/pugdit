@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from functools import lru_cache
 
@@ -16,23 +17,29 @@ class Identity(models.Model):
     fingerprint = models.TextField(unique=True)
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+    )
 
     topic_subscriptions = ArrayField(
         models.CharField(max_length=10),
         blank=True,
     )
 
-    voted_posts = models.ManyToManyField('SignedEnvelope', through='Vote',
-        related_name='voted_identities', blank=True)
-    friends = models.ManyToManyField('Identity',
-        related_name='followers', blank=True)
+    #TODO proper user <-> identity decouple
+    #voted_posts = models.ManyToManyField('Post', through='Vote',
+    #    related_name='voted_identities', blank=True)
+    #friends = models.ManyToManyField('Identity',
+    #    related_name='followers', blank=True)
 
     @property
     def subscribed_posts(self):
-        posts = SignedEnvelope.objects.none()
+        posts = Post.objects.none()
         for topic in self.topic_subscriptions:
-            #TODO SignedEnvelope.objects.for_topics(*)
-            posts |= SignedEnvelope.objects.filter(to__startswith=topic+'/')
+            #TODO Post.objects.for_topics(*)
+            posts |= Post.objects.filter(to__startswith=topic+'/')
         return posts
 
     def policy_accept_new_post(self):
@@ -41,11 +48,12 @@ class Identity(models.Model):
         return True
 
 
-class Node(models.Model):
+class Nexus(models.Model):
     peer_id = models.CharField(max_length=255, help_text='IPFS identity of the node')
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     last_manifest_path = models.CharField(max_length=255, blank=True)
+    last_sync = models.DateTimeField(auto_now=True)
 
     @lru_cache()
     def _message_health_stats(self):
@@ -69,8 +77,7 @@ class Node(models.Model):
         return True
 
 
-#TODO rename to SignedPost or Post
-class SignedEnvelope(models.Model):
+class Post(models.Model):
     to = models.CharField(max_length=512, db_index=True)
     link = models.CharField(max_length=512, help_text='IPFS url containing the message')
     timestamp = models.CharField(max_length=40) #store as plain text for signature validation purposes
@@ -79,9 +86,9 @@ class SignedEnvelope(models.Model):
     signature = models.TextField()
 
     received_timestamp = models.DateTimeField(auto_now_add=True)
-    transmitted_nodes = models.ManyToManyField(Node, blank=True,
-        related_name='transmitted_posts', help_text='Nodes that have transmitted this message')
-    pinned = models.BooleanField(default=False)
+    transmitted_nexus = models.ManyToManyField(Nexus, blank=True,
+        related_name='transmitted_posts', help_text='Nexus(es) that have transmitted this message')
+    is_pinned = models.BooleanField(default=False)
     karma = models.IntegerField(default=0)
 
     class Meta:
@@ -96,11 +103,12 @@ class SignedEnvelope(models.Model):
 
 
 class Vote(models.Model):
-    identity = models.ForeignKey(Identity, related_name='votes', on_delete=models.CASCADE)
-    post = models.ForeignKey(SignedEnvelope, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+        related_name='votes', on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     karma = models.SmallIntegerField()
 
     class Meta:
         unique_together = [
-            ('identity', 'post')
+            ('user', 'post')
         ]

@@ -13,7 +13,7 @@ import logging
 import tempfile
 import os
 
-from .models import SignedEnvelope, Identity, Node
+from .models import Post, Identity, Nexus
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,11 @@ def retrieve_manifest(node):
     return parse_manifest(raw_mani)
 
 
+def check_signature(env, verify_key):
+    smessage = ','.join((env['to'], env['link'], env['timestamp']))
+    verify_key.verify(smessage, env['signature'])
+
+
 def parse_manifest(raw_manifest):
     mani = umsgpack.unpackb(raw_manifest)
     logger.debug('read manifest: %s' % mani)
@@ -67,8 +72,7 @@ def parse_manifest(raw_manifest):
         ident['fingerprint'] = make_fingerprint(pk)
     for env in mani['posts']:
         vk = mani['identities'][env['identity']]['verify_key']
-        smessage = ','.join((env['to'], env['link'], env['timestamp']))
-        vk.verify(smessage, env['signature'])
+        check_signature(env, vk)
     return mani
 
 
@@ -87,7 +91,7 @@ def record_manifest(mani, node=None):
         else:
             if not identity.policy_accept_new_post():
                 continue
-        envelope = SignedEnvelope.objects.get_or_create(
+        envelope = Post.objects.get_or_create(
             to=env_proto['to'],
             link=env_proto['link'],
             timestamp=env_proto['timestamp'],
@@ -111,7 +115,7 @@ def test_peer(peer):
     peer_id = peer['ID']
     if peer_id == client.id()['ID']:
         return
-    node, created = Node.objects.get_or_create(peer_id=peer_id,
+    node, created = Nexus.objects.get_or_create(peer_id=peer_id,
         defaults={'is_banned': True})
     if created:
         try:
@@ -127,7 +131,7 @@ def test_peer(peer):
 
 
 def drive_route():
-    nodes = Node.objects.filter(karma__gte=0, is_banned=False)
+    nodes = Nexus.objects.filter(karma__gte=0, is_banned=False)
     return trucking_pool.imap(receive_node, nodes)
 
 
@@ -149,7 +153,7 @@ def receive_node(node):
 
 def publish_manifest():
     cutoff = datetime.datetime.today() - datetime.timedelta(days=7)
-    posts = SignedEnvelope.objects.order_by('-received_timestamp')
+    posts = Post.objects.order_by('-received_timestamp')
     posts = posts.filter(received_timestamp__gte=cutoff, karma__gte=-100)
     mani = {
         'posts': [],

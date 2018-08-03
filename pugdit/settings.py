@@ -221,7 +221,7 @@ CORS_ORIGIN_WHITELIST = (
 
 GRAPHENE = {
     # Where your Graphene schema lives
-    'SCHEMA': 'pugdit.schema.schema'
+    'SCHEMA': 'pugdit.postoffice.schema.schema'
 }
 
 TEST_RUNNER = 'snapshottest.django.TestRunner'
