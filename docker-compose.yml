@@ -1,0 +1,56 @@
+version: '2'
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: secret
+  cache:
+    image: redis
+    restart: on-failure
+  ipfs:
+    container_name: "ipfs"
+    restart: always
+    image: ipfs/go-ipfs
+    ports:
+      - "8080:8080"
+      - "5001:5001"
+    #volumes:
+    #  - ~/.ipfs/:/data/ipfs/
+  web:
+    build: .
+    image: pugdit
+    #env_file: .env
+    #command: python manage.py runserver 0.0.0.0:8000
+    restart: on-failure
+    command: gunicorn pugdit.wsgi -c pugdit/gunicorn.conf.py
+    environment:
+      DATABASE_URL: psql://postgres:secret@db/postgres
+      REDIS_URL: redis://cache:6379
+      IPFS_API: http://ipfs:5001
+      IPFS_URL: http://ipfs:8080
+      WEB_WORKER: eventlet
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    links:
+      - db
+      - cache
+      - ipfs
+  cli:
+    image: pugdit
+    #env_file: .env
+    entrypoint: python manage.py
+    environment:
+      DATABASE_URL: psql://postgres:secret@db/postgres
+      REDIS_URL: redis://cache:6379
+      IPFS_API: http://ipfs:5001
+      IPFS_URL: http://ipfs:8080
+      DEBUG: "true"
+      EVENTED: "true"
+    volumes:
+      - .:/code
+    links:
+      - db
+      - cache
+      - ipfs
