@@ -29,6 +29,7 @@ services:
       IPFS_API: http://ipfs:5001
       IPFS_URL: http://ipfs:8080
       WEB_WORKER: eventlet
+      DEBUG: "true"
     volumes:
       - .:/code
     ports:

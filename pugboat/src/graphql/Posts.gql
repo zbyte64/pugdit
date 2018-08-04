@@ -1,0 +1,7 @@
+#import "./PostFragment.gql"
+
+query posts(to__startswith: $location) {
+  allPosts { edges { node {
+    ...Post
+  }}}
+}

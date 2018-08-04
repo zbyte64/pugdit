@@ -1,0 +1,7 @@
+fragment Post on Post {
+  id
+  to
+  signer
+  link
+  timestamp
+}

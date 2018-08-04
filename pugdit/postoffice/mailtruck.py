@@ -155,6 +155,7 @@ def publish_manifest():
     cutoff = datetime.datetime.today() - datetime.timedelta(days=7)
     posts = Post.objects.order_by('-received_timestamp')
     posts = posts.filter(received_timestamp__gte=cutoff, karma__gte=-100)
+    posts = posts[:1000]
     mani = {
         'posts': [],
         'identities': {}

@@ -1,6 +1,6 @@
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from graphene_django.forms.mutation import DjangoModelFormMutation
+from graphene_django.forms.mutation import DjangoFormMutation
 from graphene.relay import Node
 from graphene import ObjectType, Schema
 
@@ -32,7 +32,13 @@ class PostNode(DjangoObjectType):
     #TODO votes
     class Meta:
         model = Post
-        filter_fields = ['karma', 'is_pinned', 'to', 'signer', 'received_timestamp']
+        filter_fields = {
+            'karma': ['lte', 'gte'],
+            'is_pinned': ['exact'],
+            'to': ['startswith', 'exact'],
+            'signer': ['exact'],
+            'received_timestamp': ['lte', 'gte'],
+        }
         interfaces = (Node, )
 
 
@@ -44,16 +50,16 @@ class Query(ObjectType):
     all_identities = DjangoFilterConnectionField(IdentityNode)
 
     post = Node.Field(PostNode)
-    all_posts = DjangoFilterConnectionField(PostNode)
+    all_posts = DjangoFilterConnectionField(PostNode, order_by=['to', '-received_timestamp'])
 
 
-class PostMarkMutation(DjangoModelFormMutation):
+class PostMarkMutation(DjangoFormMutation):
     class Meta:
         form_class = PostMarkForm
 
 
 class Mutation(ObjectType):
-    post = PostMarkMutation.Field()
+    postmark = PostMarkMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)
