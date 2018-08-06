@@ -3,9 +3,17 @@
   <div class="location">
       <input v-model="location"/>
   </div>
+  <div class="new-post">
+  <router-link :to="`/reply/${location}`" class="post-reply">
+    <div color="navy" class="button">
+      <p class="big-text">Post</p>
+    </div>
+  </router-link>
+  </div>
   <div class="posts">
       <ApolloQuery
         :query="require('../graphql/Posts.gql')"
+        :variables="{location}"
       >
         <div slot-scope="{ result: { data } }">
           <template v-if="data">
@@ -39,7 +47,7 @@ export default {
         location: ''
     }
   },
-  computed:
+  computed: {
   },
 
   methods: {

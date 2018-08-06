@@ -2,18 +2,21 @@
   <v-container fluid>
     <v-slide-y-transition mode="out-in">
       <v-layout column align-center>
-          <Posts/>
+          <PostMark :to="to"/>
       </v-layout>
     </v-slide-y-transition>
   </v-container>
 </template>
 
 <script>
-import Posts from '../components/Posts.vue';
+import PostMark from '../components/PostMark.vue';
 
 export default {
+    props: {
+        to: String
+    },
     components: {
-        Posts
+        PostMark
     }
 }
 </script>

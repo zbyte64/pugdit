@@ -216,6 +216,8 @@ CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:3000',
     'localhost:8000',
     '127.0.0.1:8000',
+    'localhost:8081',
+    '127.0.0.1:8081',
 )
 # CORS_ALLOW_CREDENTIALS = True
 
@@ -225,6 +227,7 @@ GRAPHENE = {
 }
 
 TEST_RUNNER = 'snapshottest.django.TestRunner'
+
 
 # https://github.com/ipfs/notes/issues/15
 SERVICE_BLOCKNAME = 'TODO'

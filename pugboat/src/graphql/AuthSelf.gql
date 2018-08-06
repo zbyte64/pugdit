@@ -1,0 +1,11 @@
+query authSelf {
+  authUser {
+    id, username, firstName, lastName, email, isStaff, isActive, identitySet {
+      edges {
+        node {
+          id, publicKey
+        }
+      }
+    }
+  }
+}

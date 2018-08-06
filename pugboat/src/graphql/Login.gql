@@ -1,0 +1,5 @@
+mutation login($username: String!, $password: String!) {
+  authentication(input: {username:$username, password: $password}) {
+    clientMutationId
+  }
+}

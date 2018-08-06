@@ -1,7 +1,7 @@
-fragment Post on Post {
+fragment post on Post {
   id
   to
-  signer
+  signer {id}
   link
   timestamp
 }

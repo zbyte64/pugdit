@@ -9,7 +9,7 @@ Vue.use(VueApollo)
 const AUTH_TOKEN = 'apollo-token'
 
 // Http endpoint
-const httpEndpoint = process.env.VUE_APP_GRAPHQL_HTTP || 'http://localhost:8000/graphql'
+const httpEndpoint = process.env.VUE_APP_GRAPHQL_HTTP || 'http://localhost:8000/graphql/'
 // Files URL root
 export const filesRoot = process.env.VUE_APP_FILES_ROOT || httpEndpoint.substr(0, httpEndpoint.indexOf('/graphql'))
 
@@ -21,6 +21,7 @@ Object.defineProperty(Vue.prototype, '$filesRoot', {
 const defaultOptions = {
   // You can use `https` for secure connection (recommended in production)
   httpEndpoint,
+  httpLinkOptions: {credentials: 'same-origin', fetchOptions: {credentials: 'same-orignin'}},
   // You can use `wss` for secure connection (recommended in production)
   // Use `null` to disable subscriptions
   wsEndpoint: null, //process.env.VUE_APP_GRAPHQL_WS || 'ws://localhost:8000/graphql',
@@ -58,6 +59,9 @@ export function createProvider (options = {}) {
     ...options,
   })
   apolloClient.wsClient = wsClient
+
+  console.log('ac', apolloClient)
+  console.log(defaultOptions)
 
   // Create vue apollo provider
   const apolloProvider = new VueApollo({
