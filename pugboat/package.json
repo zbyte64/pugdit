@@ -8,9 +8,11 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "js-cookie": "^2.2.0",
     "node-rsa": "^1.0.1",
     "vue": "^2.5.16",
     "vue-apollo": "^3.0.0-beta.10",
+    "vue-resource": "^1.5.1",
     "vue-router": "^3.0.1",
     "vue-wysiwyg": "^1.7.2",
     "vuetify": "^1.0.19",
@@ -52,5 +54,23 @@
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
-  ]
+  ],
+  "vue": {
+    "devServer": {
+      "proxy": {
+        "/add-asset": {
+          "target": "http://localhost:8000"
+        },
+        "/ipfs": {
+          "target": "http://localhost:8000"
+        },
+        "/graphql": {
+          "target": "http://localhost:8000"
+        },
+        "/admin": {
+          "target": "http://localhost:8000"
+        }
+      }
+    }
+  }
 }

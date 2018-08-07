@@ -38,15 +38,19 @@ export default {
   methods: {
     async uploadMessage () {
       if (!this.formValid) return
-      //TODO submit to add_asset to get link
+      //TODO indicate mimetype
+      let response = await this.$http.post('/add-asset/', {filename: 'post', content:this.$data.newMessage})
+      let link = response.data
+      let payload = [this.$props.to, link, this.$data.timestamp].join(',')
+      let signature = sign(payload)
       await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {
             to: this.$props.to,
             timestamp: this.$data.timestamp,
             signer: this.$data.signer,
-            link: this.$data.link,
-            signature: this.$data.signature,
+            link: link,
+            signature: signature,
         }
       })
     }
