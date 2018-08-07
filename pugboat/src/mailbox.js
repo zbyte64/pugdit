@@ -10,7 +10,7 @@ export function newIdentity(username) {
   localStorage.setItem('identity_public_key', public_key);
   localStorage.setItem('identity_private_key', private_key);
   return {
-    'signed_username': key.sign(username),
+    'signed_username': key.sign(username).toString('hex'),
     'public_key': public_key,
   };
 }
@@ -27,5 +27,6 @@ export function loadKey() {
 
 export function sign(payload) {
   let key = loadKey();
-  return key.sign(payload, 'utf8', 'hex');
+  let b = key.sign(payload);
+  return b.toString('hex');
 }

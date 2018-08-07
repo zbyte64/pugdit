@@ -16,9 +16,9 @@ Vue.http.headers.common['X_CSRFTOKEN'] = csrftoken;
 
 Vue.use(wysiwyg, {
   image: {
-    uploadURL: "/add-asset/",
+    uploadURL: "/api/add-asset/",
     dropzoneOptions: {
-      url: "/add-asset/",
+      url: "/api/add-asset/",
       headers: { "X-CSRFTOKEN": csrftoken }
     }
   },

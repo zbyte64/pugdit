@@ -39,7 +39,7 @@ export default {
     async uploadMessage () {
       if (!this.formValid) return
       //TODO indicate mimetype
-      let response = await this.$http.post('/add-asset/', {filename: 'post', content:this.$data.newMessage})
+      let response = await this.$http.post('/api/add-asset/', {filename: 'post', content:this.$data.newMessage})
       let link = response.data
       let payload = [this.$props.to, link, this.$data.timestamp].join(',')
       let signature = sign(payload)

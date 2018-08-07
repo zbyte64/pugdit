@@ -5,12 +5,13 @@ name = "pypi"
 
 [packages]
 Django = "==2.0.4"
-"graphene-django" = "==2.1.0"
-"django-filter" = "==1.1.0"
+"graphene-django" = {git='https://github.com/jayhale/graphene-django.git', ref='django-filter-2', editable=true}
+"django-filter" = "==2.0.0"
 "django-backblazeb2-storage" = "*"
 django-environ = "*"
 django-extensions = "*"
 django-revproxy = "==0.9.15"
+djangorestframework-jwt = "==1.11.0"
 ipython = "*"
 ipdb = "*"
 Pillow = "*"
@@ -40,4 +41,4 @@ coverage = "*"
 "u-msgpack-python" = "==2.5.0"
 
 [requires]
-python_version = "3.6"
+python_version = "==3.6"

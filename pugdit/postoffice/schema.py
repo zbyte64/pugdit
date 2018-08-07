@@ -63,6 +63,7 @@ class Query(ObjectType):
 
     def resolve_auth_user(self, info, **kwargs):
         user = info.context.user
+        print(user)
         if not user.is_authenticated:
             return None
         return user
@@ -102,7 +103,11 @@ class AuthenticationMutation(DjangoFormMutation):
     @classmethod
     def perform_mutate(cls, form, info):
         obj = form.get_user()
-        login(form.request, obj)
+        if not form.request.COOKIES:
+            pass
+            #TODO return auth token
+        else:
+            login(form.request, obj)
         #kwargs = {'authUser': obj}
         return cls(errors=[])#, **kwargs)
 

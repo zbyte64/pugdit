@@ -19,33 +19,24 @@
                 >
                     <div class="public_key">{{identity.public_key}}</div>
                 </div>
-              <button v-if="!data.authUser.identitySet.edges || !key" @click="registerIdentity">Register Identity</button>
+              <button v-if="!data.authUser.identitySet.edges.length || !key" @click="registerIdentity">Register Identity</button>
               </template>
               <template v-else>
-                  <ApolloMutation
-                    :mutation="require('../graphql/Login.gql')"
-                    :variables="{
-                      username: username,
-                      password: password
-                    }"
-                    class="form"
-                  >
-                    <template slot-scope="{ mutate }">
-                        <input
-                          v-model="username"
-                          placeholder="Type your username"
-                          class="input"
-                          type="text"
-                        >
+                  <form v-on:submit.prevent="true">
+                    <input
+                      v-model="username"
+                      placeholder="Type your username"
+                      class="input"
+                      type="text"
+                    >
                       <input
                         v-model="password"
                         placeholder="Type your password"
                         class="input"
                         type="password"
-                        @keyup.enter="mutate()"
                       >
-                    </template>
-                  </ApolloMutation>
+                      <button @click="login">Login</button>
+                  </form>
               </template>
             </div>
           </ApolloQuery>
@@ -75,8 +66,17 @@ export default {
             if (!user) return
             this.$data.username = user.username
         },
+        async login() {
+            let response = await this.$http.post('/api/token-auth/', {
+                username: this.$data.username,
+                password: this.$data.password,
+            })
+            let token = response.data.token;
+            window.localStorage.setItem('apollo-token', token);
+        },
         async registerIdentity () {
           let {public_key, signed_username} = newIdentity(this.$data.username);
+          console.log('su', signed_username)
           await this.$apollo.mutate({
             mutation: REGISTER_IDENTITY,
             variables: {
