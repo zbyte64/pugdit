@@ -5,6 +5,14 @@ import App from './App.vue'
 import { createProvider } from './vue-apollo'
 import router from './router'
 import store from './store'
+import wysiwyg from "vue-wysiwyg";
+
+Vue.use(wysiwyg, {
+  image: {
+    uploadURL: "/api/myEndpoint",
+    dropzoneOptions: {}
+  },
+});
 
 Vue.config.productionTip = false
 

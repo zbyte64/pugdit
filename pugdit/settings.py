@@ -231,3 +231,5 @@ TEST_RUNNER = 'snapshottest.django.TestRunner'
 
 # https://github.com/ipfs/notes/issues/15
 SERVICE_BLOCKNAME = 'TODO'
+IPFS_URL = env('IPFS_URL')
+IPFS_API = env('IPFS_API')

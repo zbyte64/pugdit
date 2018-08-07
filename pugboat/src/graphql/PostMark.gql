@@ -1,5 +1,5 @@
 mutation postMark ($to: String!, $link: String!, $timestamp: String!, $signature: String!, $signer: ID!) {
   postMark (input: {to: $to, link: $link, timestamp: $timestamp, signature: $signature, signer: $signer}) {
-    id, to, link, timestamp, signature, signer
+    post {id, to, link, timestamp, signature, signer {id} }
   }
 }

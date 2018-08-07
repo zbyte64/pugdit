@@ -1,11 +1,9 @@
 <template>
   <div class="post-mark">
-    <input
-      v-model="newMessage"
-      placeholder="Type a message"
-      class="input"
-      @keyup.enter="formValid && uploadMessage()"
-    >
+    <wysiwyg v-model="newMessage" />
+    <button
+      @click="formValid && uploadMessage()"
+    >Upload</button>
   </div>
 </template>
 
@@ -40,6 +38,7 @@ export default {
   methods: {
     async uploadMessage () {
       if (!this.formValid) return
+      //TODO submit to add_asset to get link
       await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {
@@ -56,6 +55,8 @@ export default {
 </script>
 
 <style scoped>
+@import "~vue-wysiwyg/dist/vueWysiwyg.css";
+
 .form,
 .input,
 .apollo,

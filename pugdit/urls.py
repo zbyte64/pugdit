@@ -14,15 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from django.conf import settings
 from graphene_django.views import GraphQLView
 from django.views.decorators.csrf import csrf_exempt
+from revproxy.views import ProxyView
 
 from .postoffice.schema import schema
+from .postoffice.views import add_asset
 
 
 admin.autodiscover()
@@ -33,6 +35,9 @@ urlpatterns = [
     # - index.html served on /
     # - all /static/... files served on /...
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
+    #TODO big "cross site" scripting security hole
+    re_path(r'^ipfs/(?P<path>.*)$', ProxyView.as_view(upstream=settings.IPFS_URL + '/ipfs/')),
+    path('add-asset/', add_asset),
 
     # other views still work too
     path('admin/', admin.site.urls),

@@ -14,7 +14,7 @@ from functools import lru_cache
 # Create your models here.
 class Identity(models.Model):
     public_key = models.TextField(unique=True)
-    fingerprint = models.TextField(unique=True)
+    fingerprint = models.TextField(unique=True) #TODO max length of hash?
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     owner = models.ForeignKey(
@@ -27,6 +27,9 @@ class Identity(models.Model):
         models.CharField(max_length=10),
         blank=True,
     )
+
+    def __str__(self):
+        return self.fingerprint
 
     #TODO proper user <-> identity decouple
     #voted_posts = models.ManyToManyField('Post', through='Vote',
@@ -54,6 +57,9 @@ class Nexus(models.Model):
     is_banned = models.BooleanField(default=False)
     last_manifest_path = models.CharField(max_length=255, blank=True)
     last_sync = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.peer_id
 
     @lru_cache()
     def _message_health_stats(self):
@@ -112,3 +118,14 @@ class Vote(models.Model):
         unique_together = [
             ('user', 'post')
         ]
+
+
+class Asset(models.Model):
+    ipfs_hash = models.CharField(max_length=64, unique=True)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='pinned_assets')
+
+    def get_absolute_url(self):
+        return '/ipfs/' + self.ipfs_hash
+
+    def __str__(self):
+        return self.get_absolute_url()
