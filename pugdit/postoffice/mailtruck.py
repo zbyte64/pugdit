@@ -3,7 +3,7 @@ import ipfsapi
 from ipfsapi.exceptions import ErrorResponse, StatusError
 from django.conf import settings
 import nacl.utils
-from nacl.encoding import HexEncoder as KeyEncoder
+from nacl.encoding import Base64Encoder as KeyEncoder
 from nacl.signing import SigningKey, VerifyKey
 import hashlib
 import umsgpack

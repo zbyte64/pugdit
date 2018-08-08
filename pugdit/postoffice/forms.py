@@ -1,6 +1,7 @@
 from django import forms
 from nacl.signing import VerifyKey
-from nacl.encoding import HexEncoder as KeyEncoder
+from nacl.encoding import Base64Encoder as KeyEncoder
+from base64 import b64encode, b64decode
 from .models import Post, Identity
 from .mailtruck import check_signature, make_fingerprint
 
@@ -36,13 +37,14 @@ class RegisterIdentityForm(forms.ModelForm):
         print('clean')
         assert self.owner
         cleaned_data = super(RegisterIdentityForm, self).clean()
-        print(cleaned_data)
-        signed_username = cleaned_data['signed_username'].encode('utf8')
+        print(cleaned_data, self.owner.username)
         public_key = cleaned_data['public_key'].encode('utf8')
+        #signing was against native-encoding
+        signed_username = b64decode(cleaned_data['signed_username'].encode('utf8'))
         username = self.owner.username.encode('utf8')
         try:
             vk = VerifyKey(public_key, KeyEncoder)
-            vk.verify(username, signed_username, KeyEncoder)
+            vk.verify(username, signed_username)
         except ValueError as error:
             print('validation fail:', error)
             raise forms.ValidationError(str(error))
