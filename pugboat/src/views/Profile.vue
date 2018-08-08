@@ -77,11 +77,12 @@ export default {
         async registerIdentity () {
           let {public_key, signed_username} = newIdentity(this.$data.username);
           console.log('su', signed_username)
+          this.$data.key = public_key
           await this.$apollo.mutate({
             mutation: REGISTER_IDENTITY,
             variables: {
-                signed_username: signed_username,
-                public_key: public_key,
+                signedUsername: signed_username,
+                publicKey: public_key,
             }
           })
         }

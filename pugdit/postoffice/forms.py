@@ -33,13 +33,24 @@ class RegisterIdentityForm(forms.ModelForm):
         self.owner = owner
 
     def clean(self):
+        print('clean')
         assert self.owner
         cleaned_data = super(RegisterIdentityForm, self).clean()
-        vk = VerifyKey(cleaned_data['public_key'], KeyEncoder)
+        print(cleaned_data)
+        signed_username = cleaned_data['signed_username'].encode('utf8')
+        public_key = cleaned_data['public_key'].encode('utf8')
+        username = self.owner.username.encode('utf8')
         try:
-            vk.verify(self.owner.username, cleaned_data['signed_username'])
+            vk = VerifyKey(public_key, KeyEncoder)
+            vk.verify(username, signed_username, KeyEncoder)
         except ValueError as error:
+            print('validation fail:', error)
             raise forms.ValidationError(str(error))
+        except Exception as error:
+            print(error)
+            print(type(error))
+            raise forms.ValidationError(str(error))
+        print('verified')
         return cleaned_data
 
     def save(self):

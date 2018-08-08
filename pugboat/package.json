@@ -10,6 +10,7 @@
   "dependencies": {
     "js-cookie": "^2.2.0",
     "node-rsa": "^1.0.1",
+    "tweetnacl": "^1.0.0",
     "vue": "^2.5.16",
     "vue-apollo": "^3.0.0-beta.10",
     "vue-resource": "^1.5.1",

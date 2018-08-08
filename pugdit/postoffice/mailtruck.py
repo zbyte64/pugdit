@@ -57,6 +57,7 @@ def retrieve_manifest(node):
 
 def check_signature(env, verify_key):
     smessage = ','.join((env['to'], env['link'], env['timestamp']))
+    smessage = smessage.encode('utf8')
     verify_key.verify(smessage, env['signature'])
 
 

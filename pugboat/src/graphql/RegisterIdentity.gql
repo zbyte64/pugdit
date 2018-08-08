@@ -1,5 +1,5 @@
-mutation registerIdentity ($signed_username: String!, $public_key: String!) {
-  registerIdentity (input: {signedUsername: $signed_username, publicKey: $public_key}) {
+mutation registerIdentity ($signedUsername: String!, $publicKey: String!) {
+  registerIdentity (input: {signedUsername: $signedUsername, publicKey: $publicKey}) {
     identity {id, publicKey, fingerprint, karma}
   }
 }
