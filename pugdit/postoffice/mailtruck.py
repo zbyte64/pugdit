@@ -55,10 +55,12 @@ def retrieve_manifest(node):
     return parse_manifest(raw_mani)
 
 
+#TODO check_envelope_signature
 def check_signature(env, verify_key):
-    smessage = ','.join((env['to'], env['link'], env['timestamp']))
-    smessage = smessage.encode('utf8')
-    verify_key.verify(smessage, env['signature'])
+    message = ','.join((env['to'], env['link'], env['timestamp']))
+    message = message.encode('utf8')
+    smessage = verify_key.verify(env['signature'])
+    assert smessage == message
 
 
 def parse_manifest(raw_manifest):

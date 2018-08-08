@@ -22,21 +22,20 @@
               <button v-if="!data.authUser.identitySet.edges.length || !key" @click="registerIdentity">Register Identity</button>
               </template>
               <template v-else>
-                  <form v-on:submit.prevent="true">
-                    <input
+                  <v-form v-on:submit.prevent="login">
+                    <v-text-field
                       v-model="username"
+                      label="Username"
                       placeholder="Type your username"
-                      class="input"
-                      type="text"
-                    >
-                      <input
+                    />
+                      <v-text-field
                         v-model="password"
+                        label="Password"
                         placeholder="Type your password"
-                        class="input"
                         type="password"
-                      >
-                      <button @click="login">Login</button>
-                  </form>
+                      />
+                      <v-btn>Login</v-btn>
+                  </v-form>
               </template>
             </div>
           </ApolloQuery>

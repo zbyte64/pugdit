@@ -39,12 +39,10 @@ class RegisterIdentityForm(forms.ModelForm):
         cleaned_data = super(RegisterIdentityForm, self).clean()
         print(cleaned_data, self.owner.username)
         public_key = cleaned_data['public_key'].encode('utf8')
-        #signing was against native-encoding
         signed_username = b64decode(cleaned_data['signed_username'].encode('utf8'))
-        username = self.owner.username.encode('utf8')
         try:
             vk = VerifyKey(public_key, KeyEncoder)
-            vk.verify(username, signed_username)
+            username = vk.verify(signed_username)
         except ValueError as error:
             print('validation fail:', error)
             raise forms.ValidationError(str(error))
@@ -52,12 +50,15 @@ class RegisterIdentityForm(forms.ModelForm):
             print(error)
             print(type(error))
             raise forms.ValidationError(str(error))
+        else:
+            if username != self.owner.username.encode('utf8'):
+                raise forms.ValidationError('Signature was not authorized for this user')
         print('verified')
         return cleaned_data
 
     def save(self):
         identity = super(RegisterIdentityForm, self).save(commit=False)
         identity.owner = self.owner
-        identity.fingerprint = make_fingerprint(identity.public_key)
+        identity.fingerprint = make_fingerprint(identity.public_key.encode('utf8'))
         identity.save()
         return identity

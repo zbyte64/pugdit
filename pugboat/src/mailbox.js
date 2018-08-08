@@ -1,13 +1,13 @@
 import nacl from 'tweetnacl';
 
-//create & store identity
-function encode(x) {
-  //string -> uint8 array
+
+//string -> uint8 array
+function byteArray(x) {
   return new TextEncoder().encode(x);
 }
 
+//unit8 array -> hex
 function encodeHex(x) {
-  //unit8 array -> hex
   return x.reduce(function(memo, i) {
     return memo + ('0' + i.toString(16)).slice(-2); //padd with leading 0 if <16
   }, '');
@@ -19,30 +19,50 @@ function encodeBase64(arr) {
   return btoa(s.join(''));
 }
 
+function decodeBase64(s) {
+  var i, d = atob(s), b = new Uint8Array(d.length);
+  for (i = 0; i < d.length; i++) b[i] = d.charCodeAt(i);
+  return b;
+}
+
 export function newIdentity(username) {
-  let {publicKey, secretKey} = nacl.sign.keyPair();
-  let localStorage = window.localStorage;
-  //TODO password encrypt?
-  localStorage.setItem('identity_public_key', publicKey);
-  localStorage.setItem('identity_private_key', secretKey);
-  let payload = encode(username);
+  let keyPair = getOrCreateKeyPair();
+  let payload = byteArray(username);
   return {
-    'signed_username': encodeBase64(nacl.sign(payload, secretKey)),
-    'public_key': encodeBase64(publicKey),
+    'signed_username': encodeBase64(nacl.sign(payload, keyPair.secretKey)),
+    'public_key': encodeBase64(keyPair.publicKey),
   };
 }
 
-export function loadKey() {
+export function getOrCreateKeyPair() {
   let localStorage = window.localStorage;
-  let private_key = localStorage.getItem('identity_private_key');
-  if (!private_key) return null;
-  //let public_key = localStorage.getItem('identity_public_key');
-  return private_key;
+  let keyPair = localStorage.getItem('identity_key_pair');
+  try {
+    if (keyPair) {
+      keyPair = JSON.parse(keyPair);
+      keyPair.secretKey = decodeBase64(keyPair.secretKey);
+      keyPair.publicKey = decodeBase64(keyPair.publicKey);
+    }
+  } catch(e) {
+    //pass
+  }
+  if (!keyPair || !keyPair.secretKey) {
+    keyPair = nacl.sign.keyPair();
+    localStorage.setItem('identity_key_pair', JSON.stringify({
+      secretKey: encodeBase64(keyPair.secretKey),
+      publicKey: encodeBase64(keyPair.publicKey),
+    }));
+  }
+  return keyPair;
 }
 
-export function sign(payload) {
+export function loadKey() {
+  return getOrCreateKeyPair()['secretKey'];
+}
+
+export function sign(message) {
   let key = loadKey();
-  payload = encode(payload);
+  let payload = byteArray(message);
   let b = nacl.sign(payload, key);
   return encodeBase64(b);
 }
