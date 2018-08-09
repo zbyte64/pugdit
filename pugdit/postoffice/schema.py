@@ -89,6 +89,21 @@ class RegisterIdentityMutation(DjangoModelFormMutation):
         kwargs['owner'] = info.context.user
         return kwargs
 
+    @classmethod
+    def get_form(cls, root, info, **input):
+        form_kwargs = cls.get_form_kwargs(root, info, **input)
+        form = cls._meta.form_class(**form_kwargs)
+        print('get_form:', form)
+        print(form.is_valid())
+        print(form.errors)
+        return form
+
+    @classmethod
+    def perform_mutate(cls, form, info):
+        obj = form.save()
+        print('identity saved:', obj)
+        return cls(errors=[], identity=obj)
+
 
 class AuthenticationMutation(DjangoFormMutation):
     class Meta:

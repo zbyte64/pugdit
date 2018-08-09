@@ -69,19 +69,18 @@ def parse_manifest(raw_manifest):
     }
     for key, pk in enumerate(mani['identities']):
         ident = {
-            'public_key': pk,
+            'public_key': b64encode(pk),
             'verify_key': VerifyKey(pk),
         }
         identities[key] = ident
-    for env in mani['posts']:
-        smessage, ident_index = env
+    for (smessage, ident_index) in mani['posts']:
         identity = identities[ident_index]
         vk = identity['verify_key']
-        message = vk.verify(smessage)
+        to, link = umsgpack.unpackb(vk.verify(smessage))
         posts.append({
-            'to': message[0],
-            'link': message[1],
-            'signature': smessage,
+            'to': to,
+            'link': link,
+            'signature': b64encode(smessage),
             'identity': identity,
         })
     return mani

@@ -15,7 +15,7 @@ from functools import lru_cache
 
 # Create your models here.
 class Identity(models.Model):
-    public_key = models.CharField(max_length=32, unique=True, help_text="Base64 encoded key for verifying signatures")
+    public_key = models.CharField(max_length=77, unique=True, help_text="Base64 encoded key for verifying signatures")
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     owner = models.ForeignKey(
@@ -30,7 +30,7 @@ class Identity(models.Model):
     )
 
     def __str__(self):
-        return standard_b64encode(self.public_key.encode('utf8'))
+        return self.public_key
 
     #TODO proper user <-> identity decouple
     #voted_posts = models.ManyToManyField('Post', through='Vote',
@@ -53,7 +53,7 @@ class Identity(models.Model):
 
     @property
     def verify_key(self):
-        return VerifyKey(self.public_key.encode('utf8'))
+        return VerifyKey(b64decode(self.public_key.encode('utf8')))
 
     def verify(self, smessage):
         return self.verify_key.verify(smessage)
@@ -93,10 +93,10 @@ class Nexus(models.Model):
 
 class Post(models.Model):
     to = models.CharField(max_length=512, db_index=True)
-    link = models.CharField(max_length=512, help_text='IPFS url containing the message')
+    link = models.CharField(max_length=255, help_text='IPFS url containing the message')
 
     signer = models.ForeignKey(Identity, related_name='posts', on_delete=models.CASCADE)
-    signature = models.CharField(max_length=64)
+    signature = models.CharField(max_length=1024)
 
     received_timestamp = models.DateTimeField(auto_now_add=True)
     transmitted_nexus = models.ManyToManyField(Nexus, blank=True,

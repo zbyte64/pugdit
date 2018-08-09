@@ -29,23 +29,34 @@ class PostMarkForm(forms.ModelForm):
 
 
 class RegisterIdentityForm(forms.ModelForm):
+    public_key = forms.CharField(max_length=77)
     signed_username = forms.CharField()
 
     class Meta:
         model = Identity
-        fields = ['public_key']
+        fields = []
+        exclude = ['public_key']
 
     def __init__(self, data=None, owner=None):
         super(RegisterIdentityForm, self).__init__(data=data)
         self.owner = owner
 
+    def clean_public_key(self):
+        data = self.cleaned_data['public_key']
+        self.cleaned_data['public_key_base64'] = data
+        return b64decode(data.encode('utf8'))
+
+    def clean_signed_username(self):
+        data = self.cleaned_data['signed_username']
+        return b64decode(data.encode('utf8'))
+
     def clean(self):
-        print('clean')
+        print('clean', self._errors)
         assert self.owner
         cleaned_data = super(RegisterIdentityForm, self).clean()
         print(cleaned_data, self.owner.username)
-        public_key = b64decode(cleaned_data['public_key'].encode('utf8'))
-        signed_username = b64decode(cleaned_data['signed_username'].encode('utf8'))
+        public_key = cleaned_data['public_key']
+        signed_username = cleaned_data['signed_username']
         try:
             vk = VerifyKey(public_key)
             username = vk.verify(signed_username)
@@ -59,11 +70,12 @@ class RegisterIdentityForm(forms.ModelForm):
         else:
             if username != self.owner.username.encode('utf8'):
                 raise forms.ValidationError('Signature was not authorized for this user')
-        print('verified')
+        print('verified', cleaned_data)
         return cleaned_data
 
     def save(self):
         identity = super(RegisterIdentityForm, self).save(commit=False)
         identity.owner = self.owner
+        identity.public_key = self.cleaned_data['public_key_base64']
         identity.save()
         return identity

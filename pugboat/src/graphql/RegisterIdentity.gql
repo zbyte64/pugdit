@@ -1,5 +1,5 @@
 mutation registerIdentity ($signedUsername: String!, $publicKey: String!) {
   registerIdentity (input: {signedUsername: $signedUsername, publicKey: $publicKey}) {
-    identity {id, publicKey, fingerprint, karma}
+    identity {id, publicKey, karma}
   }
 }
