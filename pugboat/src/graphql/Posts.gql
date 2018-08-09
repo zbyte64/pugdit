@@ -4,6 +4,5 @@ query posts($location: String) {
       to
       signer {id}
       link
-      timestamp
   }}}
 }

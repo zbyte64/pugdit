@@ -7,7 +7,7 @@ class DeliveryTestCase(TestCase):
     def test_parse_manifest(self):
         payload = umsgpack.packb({
             'posts': [],
-            'identities': {},
+            'identities': [],
         })
         mani = parse_manifest(payload)
 

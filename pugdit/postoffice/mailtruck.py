@@ -55,41 +55,48 @@ def retrieve_manifest(node):
     return parse_manifest(raw_mani)
 
 
-#TODO check_envelope_signature
-def check_signature(env, verify_key):
-    message = ','.join((env['to'], env['link'], env['timestamp']))
-    message = message.encode('utf8')
-    smessage = verify_key.verify(env['signature'])
-    assert smessage == message
-
-
 def parse_manifest(raw_manifest):
     mani = umsgpack.unpackb(raw_manifest)
     logger.debug('read manifest: %s' % mani)
     assert isinstance(mani, dict)
-    assert isinstance(mani['identities'], dict)
+    assert isinstance(mani['identities'], list)
     assert isinstance(mani['posts'], list)
-    for ident in mani['identities'].values():
-        pk = ident['public_key']
-        ident['verify_key'] = VerifyKey(pk, KeyEncoder)
-        ident['fingerprint'] = make_fingerprint(pk)
+    identities = dict()
+    posts = list()
+    manifest = {
+        'identities': identities,
+        'posts': posts,
+    }
+    for key, pk in enumerate(mani['identities']):
+        ident = {
+            'public_key': pk,
+            'verify_key': VerifyKey(pk),
+        }
+        identities[key] = ident
     for env in mani['posts']:
-        vk = mani['identities'][env['identity']]['verify_key']
-        check_signature(env, vk)
+        smessage, ident_index = env
+        identity = identities[ident_index]
+        vk = identity['verify_key']
+        message = vk.verify(smessage)
+        posts.append({
+            'to': message[0],
+            'link': message[1],
+            'signature': smessage,
+            'identity': identity,
+        })
     return mani
 
 
 def record_manifest(mani, node=None):
     for env_proto in mani['posts']:
-        ident = mani['identities'][env_proto['identity']]
+        ident = env_prot['identity']
         try:
-            identity = Identity.object.get(fingerprint=ident['fingerprint'])
+            identity = Identity.object.get(public_key=ident['public_key'])
         except Identity.DoesNotExist:
             if node and not node.policy_accept_new_identity():
                 continue
             identity = Indentity.objects.create(
-                public_key=ident['public_key'],
-                fingerprint=ident['fingerprint']
+                public_key=ident['public_key']
             )
         else:
             if not identity.policy_accept_new_post():
@@ -97,7 +104,6 @@ def record_manifest(mani, node=None):
         envelope = Post.objects.get_or_create(
             to=env_proto['to'],
             link=env_proto['link'],
-            timestamp=env_proto['timestamp'],
             signer=identity,
             signature=env_proto['signature'],
         )[0]
@@ -160,8 +166,8 @@ def publish_manifest():
     posts = posts.filter(received_timestamp__gte=cutoff, karma__gte=-100)
     posts = posts[:1000]
     mani = {
-        'posts': [],
-        'identities': {}
+        'posts': [], #(signed_message, ident_index)
+        'identities': [] #(public_key)
     }
     idents = {}
     for post in posts:
@@ -171,22 +177,19 @@ def publish_manifest():
         else:
             ident = len(idents)
             idents[identity] = ident
-            mani['identities'][ident] = {
-                'public_key': identity.public_key
-            }
-        mani['posts'].append({
-            'to': post.to,
-            'link': post.link,
-            'timestamp': post.timestamp,
-            'signature': post.signature,
-            'identity': ident
-        })
+            mani['identities'].append(identity.public_key)
+        mani['posts'].append((
+            post.signature,
+            ident
+        ))
     raw_mani = umsgpack.packb(mani)
     logging.info('writing manifest')
     with tempfile.TemporaryDirectory() as tmpdirname:
-        mani_path = os.path.join(tmpdirname, 'manifest.msg')
+        mani_path = os.path.join(tmpdirname, 'manifest.mp')
         open(mani_path, 'wb').write(raw_mani)
-        add_result = client.add(mani_path)
+        #TODO dont assume the first is our file
+        #TODO get_path_from_add
+        add_result = client.add(mani_path, wrap_with_directory=True)[0]
     ipfs_path = '/ipfs/' + add_result['Hash']
     client.name_publish(ipfs_path)
 

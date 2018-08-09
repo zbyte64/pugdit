@@ -11,17 +11,21 @@ from .mailtruck import client
 @login_required
 def add_asset(request):
     assert request.method == 'POST'
+    print(request.FILES)
+    print(request.POST)
     if request.FILES:
-        key, file_o = next(request.FILES.items())
+        _, file_o = next(request.FILES.items())
+        filename = file_o.name
     else:
         data = json.loads(request.body)
-        key = data['filename']
+        filename = data['filename']
         file_o = data['content'].encode('utf8')
-    asset = pin_asset(file_o, filename=key, user=request.user)
+    asset = pin_asset(file_o, filename=filename, user=request.user)
     return HttpResponse(asset.get_absolute_url())
 
 
 def add_assets(request):
+    #TODO upload as a single directory
     assets = {}
     for key, file_o in request.FILES.items():
         asset = pin_asset(file_o, filename=key, user=request.user)
@@ -38,8 +42,10 @@ def pin_asset(upload, filename, user):
                     destination.write(chunk)
             else:
                 destination.write(upload)
-        add_result = client.add(destination_path)
+        #TODO don't assume first is the file, make path instead
+        add_result = client.add(destination_path, wrap_with_directory=True)[0]
     print(add_result)
     asset, _c = Asset.objects.get_or_create(ipfs_hash=add_result['Hash'])
     asset.users.add(user)
+    #TODO add paths
     return asset

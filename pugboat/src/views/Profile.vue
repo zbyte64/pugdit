@@ -17,9 +17,9 @@
                   :key="identity.id"
                   class="identity"
                 >
-                    <div class="public_key">{{identity.public_key}}</div>
+                    <div class="public_key"><label>fingerprint:</label>{{identity.fingerprint}}</div>
                 </div>
-              <button v-if="!data.authUser.identitySet.edges.length || !key" @click="registerIdentity">Register Identity</button>
+              <v-btn v-if="!data.authUser.identitySet.edges.length || !key" @click="registerIdentity">Register Identity</v-btn>
               </template>
               <template v-else>
                   <v-form v-on:submit.prevent="login">
@@ -34,7 +34,7 @@
                         placeholder="Type your password"
                         type="password"
                       />
-                      <v-btn>Login</v-btn>
+                      <v-btn @click="login">Login</v-btn>
                   </v-form>
               </template>
             </div>

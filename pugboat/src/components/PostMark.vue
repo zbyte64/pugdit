@@ -18,7 +18,6 @@ export default {
   data () {
     return {
       newMessage: '',
-      timestamp: '',
       signer: 1,
       link: '',
       signature: '',
@@ -41,18 +40,20 @@ export default {
       //TODO indicate mimetype
       let response = await this.$http.post('/api/add-asset/', {filename: 'post', content:this.$data.newMessage})
       let link = response.data
-      let payload = [this.$props.to, link, this.$data.timestamp].join(',')
+      //TODO msgpack
+      let payload = [this.$props.to, link].join(',')
       let signature = sign(payload)
       await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {
             to: this.$props.to,
-            timestamp: this.$data.timestamp,
             signer: this.$data.signer,
             link: link,
             signature: signature,
         }
       })
+      this.$data.link = link
+      this.$data.signature = signature
     }
   },
 }

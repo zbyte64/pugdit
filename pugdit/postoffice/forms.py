@@ -1,25 +1,31 @@
 from django import forms
 from nacl.signing import VerifyKey
-from nacl.encoding import Base64Encoder as KeyEncoder
 from base64 import b64encode, b64decode
 from .models import Post, Identity
-from .mailtruck import check_signature, make_fingerprint
 
 
 class PostMarkForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['to', 'link', 'timestamp', 'signature', 'signer']
+        fields = ['signature', 'signer']
 
     def clean(self):
         cleaned_data = super(PostMarkForm, self).clean()
-        public_key = cleaned_data['signer'].public_key
-        vk = VerifyKey(public_key, KeyEncoder)
+        signer = cleaned_data['signer']
+        raw_signature = b64decode(cleaned_data['signature'].encode('utf8'))
         try:
-            check_signature(env, vk)
+            message = signer.verify(raw_signature)
+            cleaned_data['to'], cleaned_data['link'] = message
         except ValueError as error:
             raise forms.ValidationError(str(error))
         return cleaned_data
+
+    def save(self):
+        post = super(PostMarkForm, self).save(commit=False)
+        post.to = self.cleaned_data['to']
+        post.link = self.cleaned_data['link']
+        post.save()
+        return post
 
 
 class RegisterIdentityForm(forms.ModelForm):
@@ -38,10 +44,10 @@ class RegisterIdentityForm(forms.ModelForm):
         assert self.owner
         cleaned_data = super(RegisterIdentityForm, self).clean()
         print(cleaned_data, self.owner.username)
-        public_key = cleaned_data['public_key'].encode('utf8')
+        public_key = b64decode(cleaned_data['public_key'].encode('utf8'))
         signed_username = b64decode(cleaned_data['signed_username'].encode('utf8'))
         try:
-            vk = VerifyKey(public_key, KeyEncoder)
+            vk = VerifyKey(public_key)
             username = vk.verify(signed_username)
         except ValueError as error:
             print('validation fail:', error)
@@ -59,6 +65,5 @@ class RegisterIdentityForm(forms.ModelForm):
     def save(self):
         identity = super(RegisterIdentityForm, self).save(commit=False)
         identity.owner = self.owner
-        identity.fingerprint = make_fingerprint(identity.public_key.encode('utf8'))
         identity.save()
         return identity

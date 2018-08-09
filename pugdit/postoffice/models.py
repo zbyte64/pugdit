@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from nacl.signing import VerifyKey
+from base64 import b64decode, standard_b64encode
 from functools import lru_cache
 
 #karma:
@@ -13,8 +15,7 @@ from functools import lru_cache
 
 # Create your models here.
 class Identity(models.Model):
-    public_key = models.TextField(unique=True)
-    fingerprint = models.TextField(unique=True) #TODO max length of hash?
+    public_key = models.CharField(max_length=32, unique=True, help_text="Base64 encoded key for verifying signatures")
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     owner = models.ForeignKey(
@@ -25,11 +26,11 @@ class Identity(models.Model):
 
     topic_subscriptions = ArrayField(
         models.CharField(max_length=10),
-        blank=True,
+        blank=True, default=list,
     )
 
     def __str__(self):
-        return self.fingerprint
+        return standard_b64encode(self.public_key.encode('utf8'))
 
     #TODO proper user <-> identity decouple
     #voted_posts = models.ManyToManyField('Post', through='Vote',
@@ -50,9 +51,16 @@ class Identity(models.Model):
             return False
         return True
 
+    @property
+    def verify_key(self):
+        return VerifyKey(self.public_key.encode('utf8'))
+
+    def verify(self, smessage):
+        return self.verify_key.verify(smessage)
+
 
 class Nexus(models.Model):
-    peer_id = models.CharField(max_length=255, help_text='IPFS identity of the node')
+    peer_id = models.CharField(max_length=46, help_text='IPFS identity of the node')
     karma = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     last_manifest_path = models.CharField(max_length=255, blank=True)
@@ -86,26 +94,28 @@ class Nexus(models.Model):
 class Post(models.Model):
     to = models.CharField(max_length=512, db_index=True)
     link = models.CharField(max_length=512, help_text='IPFS url containing the message')
-    timestamp = models.CharField(max_length=40) #store as plain text for signature validation purposes
 
     signer = models.ForeignKey(Identity, related_name='posts', on_delete=models.CASCADE)
-    signature = models.TextField()
+    signature = models.CharField(max_length=64)
 
     received_timestamp = models.DateTimeField(auto_now_add=True)
     transmitted_nexus = models.ManyToManyField(Nexus, blank=True,
         related_name='transmitted_posts', help_text='Nexus(es) that have transmitted this message')
     is_pinned = models.BooleanField(default=False)
     karma = models.IntegerField(default=0)
+    chain_level = models.SmallIntegerField(default=0, db_index=True)
 
     class Meta:
         unique_together = [
-            ('to', 'link', 'timestamp', 'signer'),
+            ('to', 'link', 'signer'),
         ]
 
-    def validate_signature(self):
-        #TODO
-        payload = (to, link, timestamp)
-        check_signature(payload, self.identity.public_key, signature)
+    def __str__(self):
+        return standard_b64encode(self.sigature.encode('utf8'))
+
+    def clean(self):
+        self.chain_level = self.to.count('/')
+
 
 
 class Vote(models.Model):
@@ -121,8 +131,12 @@ class Vote(models.Model):
 
 
 class Asset(models.Model):
-    ipfs_hash = models.CharField(max_length=64, unique=True)
+    ipfs_hash = models.CharField(max_length=46, unique=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='pinned_assets')
+    ipfs_paths = ArrayField(
+        models.CharField(max_length=255),
+        blank=True, default=list,
+    )
 
     def get_absolute_url(self):
         return '/ipfs/' + self.ipfs_hash
