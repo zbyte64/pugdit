@@ -1,15 +1,18 @@
 <template>
   <div class="post-mark">
     <wysiwyg v-model="newMessage" />
-    <button
+    <v-btn
       @click="formValid && uploadMessage()"
-    >Upload</button>
+    >Upload</v-btn>
   </div>
 </template>
 
 <script>
 import POST_MARK from '../graphql/PostMark.gql'
-import {sign} from '../mailbox.js'
+import AUTH_SELF from '../graphql/AuthSelf.gql'
+import {sign, decodeBase64} from '../mailbox.js'
+import msgpack from 'msgpack-lite'
+
 
 export default {
   props: {
@@ -18,7 +21,6 @@ export default {
   data () {
     return {
       newMessage: '',
-      signer: 1,
       link: '',
       signature: '',
     }
@@ -40,67 +42,37 @@ export default {
       //TODO indicate mimetype
       let response = await this.$http.post('/api/add-asset/', {filename: 'post', content:this.$data.newMessage})
       let link = response.data
-      //TODO msgpack
-      let payload = [this.$props.to, link].join(',')
+      let payload = msgpack.encode([this.$props.to, link])
+      let v = msgpack.decode(payload)
+      console.log(v)
+      console.log(payload)
       let signature = sign(payload)
+      //let signer = decodeBase64(await this.getSigner())
+      let signer = 2;
       await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {
-            to: this.$props.to,
-            signer: this.$data.signer,
-            link: link,
+            //to: this.$props.to,
+            signer: signer,
+            //link: link,
             signature: signature,
         }
       })
       this.$data.link = link
       this.$data.signature = signature
+    },
+    async getSigner() {
+      //TODO dont assume its the first identity signing
+      let r = await this.$apollo.query({
+        query: AUTH_SELF,
+      })
+      console.log(r)
+      return r.data.authUser.identitySet.edges[0].node.id
     }
-  },
+  }
 }
 </script>
 
 <style scoped>
 @import "~vue-wysiwyg/dist/vueWysiwyg.css";
-
-.form,
-.input,
-.apollo,
-.message {
-  padding: 12px;
-}
-
-.input {
-  font-family: inherit;
-  font-size: inherit;
-  border: solid 2px #ccc;
-  border-radius: 3px;
-}
-
-.error {
-  color: red;
-}
-
-.images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 300px);
-  grid-auto-rows: 300px;
-  grid-gap: 10px;
-}
-
-.image-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ccc;
-  border-radius: 8px;
-}
-
-.image {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-.image-input {
-  margin: 20px;
-}
 </style>

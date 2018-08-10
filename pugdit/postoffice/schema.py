@@ -78,6 +78,21 @@ class PostMarkMutation(DjangoModelFormMutation):
         kwargs = {"data": input}
         return kwargs
 
+    @classmethod
+    def get_form(cls, root, info, **input):
+        form_kwargs = cls.get_form_kwargs(root, info, **input)
+        form = cls._meta.form_class(**form_kwargs)
+        print('postmark get_form:', form)
+        print(form.is_valid())
+        print(form.errors)
+        return form
+
+    @classmethod
+    def perform_mutate(cls, form, info):
+        obj = form.save()
+        print('postmark saved:', obj)
+        return cls(errors=[], post=obj)
+
 
 class RegisterIdentityMutation(DjangoModelFormMutation):
     class Meta:

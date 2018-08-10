@@ -1,6 +1,7 @@
 from django import forms
 from nacl.signing import VerifyKey
 from base64 import b64encode, b64decode
+import umsgpack
 from .models import Post, Identity
 
 
@@ -11,10 +12,16 @@ class PostMarkForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(PostMarkForm, self).clean()
+        print('clean postmake', cleaned_data)
+        print(self._errors)
+        print(self.data)
         signer = cleaned_data['signer']
         raw_signature = b64decode(cleaned_data['signature'].encode('utf8'))
         try:
-            message = signer.verify(raw_signature)
+            raw_message = signer.verify(raw_signature)
+            print('raw_message', raw_message)
+            message = umsgpack.unpackb(raw_message)
+            print('unpacked message:', message)
             cleaned_data['to'], cleaned_data['link'] = message
         except ValueError as error:
             raise forms.ValidationError(str(error))

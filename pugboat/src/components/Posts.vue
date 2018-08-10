@@ -1,13 +1,11 @@
 <template>
   <div>
   <div class="location">
-      <input v-model="location"/>
+      <v-input v-model="location" label="Location"/>
   </div>
   <div class="new-post">
   <router-link :to="`/reply/${location}`" class="post-reply">
-    <div color="navy" class="button">
-      <p class="big-text">Post</p>
-    </div>
+    <v-btn>Post</v-btn>
   </router-link>
   </div>
   <div class="posts">
@@ -26,9 +24,7 @@
                 <div class="post-signer">{{post.signer}}</div>
                 <div class="post-link">{{post.link}}</div>
                 <router-link :to="`/reply/${post.to}`" class="post-reply">
-                  <div color="navy" class="button">
-                    <p class="big-text">Reply</p>
-                  </div>
+                  <v-btn>Reply</v-btn>
                 </router-link>
             </div>
           </template>

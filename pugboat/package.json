@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "js-cookie": "^2.2.0",
+    "msgpack-lite": "^0.1.26",
     "node-rsa": "^1.0.1",
     "tweetnacl": "^1.0.0",
     "vue": "^2.5.16",

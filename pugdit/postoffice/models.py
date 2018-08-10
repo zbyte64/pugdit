@@ -111,7 +111,7 @@ class Post(models.Model):
         ]
 
     def __str__(self):
-        return standard_b64encode(self.sigature.encode('utf8'))
+        return str(standard_b64encode(self.signature.encode('utf8')))
 
     def clean(self):
         self.chain_level = self.to.count('/')

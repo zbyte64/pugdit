@@ -19,7 +19,7 @@ function encodeBase64(arr) {
   return btoa(s.join(''));
 }
 
-function decodeBase64(s) {
+export function decodeBase64(s) {
   var i, d = atob(s), b = new Uint8Array(d.length);
   for (i = 0; i < d.length; i++) b[i] = d.charCodeAt(i);
   return b;
@@ -62,7 +62,7 @@ export function loadKey() {
 
 export function sign(message) {
   let key = loadKey();
-  let payload = byteArray(message);
+  let payload = message; //byteArray(message);
   let b = nacl.sign(payload, key);
   return encodeBase64(b);
 }

@@ -13,11 +13,11 @@
                   <div><label>username:</label> {{data.authUser.username}}</div>
                   <div><label>email:</label> {{data.authUser.email}}</div>
                 <div
-                  v-for="identity of data.authUser.identitySet.edges"
-                  :key="identity.id"
+                  v-for="edge of data.authUser.identitySet.edges"
+                  :key="edge.node.id"
                   class="identity"
                 >
-                    <div class="public_key"><label>fingerprint:</label>{{identity.fingerprint}}</div>
+                    <div class="publicKey"><label>public key:</label>{{edge.node.publicKey}}</div>
                 </div>
               <v-btn v-if="!data.authUser.identitySet.edges.length || !key" @click="registerIdentity">Register Identity</v-btn>
               </template>
