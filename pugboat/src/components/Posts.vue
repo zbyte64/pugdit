@@ -16,14 +16,18 @@
         <div slot-scope="{ result: { data } }">
           <template v-if="data">
             <div
-              v-for="post of data.allPosts.edges"
-              :key="post.id"
+              v-for="e of data.allPosts.edges"
+              :key="e.node.id"
               class="post"
             >
-                <div class="post-to">{{post.to}}</div>
-                <div class="post-signer">{{post.signer}}</div>
-                <div class="post-link">{{post.link}}</div>
-                <router-link :to="`/reply/${post.to}`" class="post-reply">
+                <div class="post-to">{{e.node.to}}</div>
+                <div class="post-signer">{{e.node.signer.id}}</div>
+                <div class="post-link">{{e.node.link}}</div>
+                <div v-if="e.node.file">
+                    <div class="post-content-type">{{e.node.file.contentType}}</div>
+                    <div class="post-content">{{e.node.file.content|sanitize}}</div>
+                </div>
+                <router-link :to="`/reply/${e.node.to}`" class="post-reply">
                   <v-btn>Reply</v-btn>
                 </router-link>
             </div>
@@ -35,6 +39,7 @@
 </template>
 
 <script>
+import sanitizeHtml from 'sanitize-html';
 
 export default {
   name: 'Posts',
@@ -48,6 +53,13 @@ export default {
 
   methods: {
   },
+  filters: {
+    sanitize: function (value) {
+      if (!value) return ''
+      value = value.toString()
+      return sanitizeHtml(value)
+    }
+  }
 }
 </script>
 

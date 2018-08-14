@@ -2,7 +2,7 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.forms.mutation import DjangoModelFormMutation, DjangoFormMutation
 from graphene.relay import Node
-from graphene import ObjectType, Schema, Field
+from graphene import ObjectType, Schema, Field, String, Int
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
@@ -36,7 +36,19 @@ class VoteNode(DjangoObjectType):
         interfaces = (Node, )
 
 
+class IpfsFileNode(ObjectType):
+    content_type = String()
+    content = String()
+    size = Int()
+
+    class Meta:
+        interfaces = (Node, )
+
+
+
+
 class PostNode(DjangoObjectType):
+    file = Field(IpfsFileNode)
     #TODO votes
     class Meta:
         model = Post
@@ -48,6 +60,17 @@ class PostNode(DjangoObjectType):
             'received_timestamp': ['lte', 'gte'],
         }
         interfaces = (Node, )
+
+    def resolve_file(self, info, **kwargs):
+        from .mailtruck import client
+        r = client.cat(self.link).decode('utf8')
+        r = {
+            'content': r,
+            'size': len(r),
+            'content_type': 'text/html'
+        }
+        print('resolved file', r)
+        return IpfsFileNode(**r)
 
 
 class Query(ObjectType):

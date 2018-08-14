@@ -4,5 +4,10 @@ query posts($location: String) {
       to
       signer {id}
       link
+      file {
+        content
+        contentType
+        size
+      }
   }}}
 }
