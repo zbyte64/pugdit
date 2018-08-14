@@ -27,7 +27,7 @@
                     <div class="post-content-type">{{e.node.file.contentType}}</div>
                     <div class="post-content">{{e.node.file.content|sanitize}}</div>
                 </div>
-                <router-link :to="`/reply/${e.node.to}`" class="post-reply">
+                <router-link :to="`/reply/${e.node.address}`" class="post-reply">
                   <v-btn>Reply</v-btn>
                 </router-link>
             </div>

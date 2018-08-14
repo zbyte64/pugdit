@@ -111,10 +111,13 @@ class Post(models.Model):
         ]
 
     def __str__(self):
-        return str(standard_b64encode(self.signature.encode('utf8')))
+        return self.signature
 
     def clean(self):
         self.chain_level = self.to.count('/')
+
+    def verify(self):
+        self.signer.verify(b64decode(self.signature))
 
 
 

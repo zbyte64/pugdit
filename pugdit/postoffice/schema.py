@@ -6,6 +6,7 @@ from graphene import ObjectType, Schema, Field, String, Int
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
+from base64 import standard_b64decode, standard_b64encode
 
 from .models import Nexus, Identity, Post, Vote
 from .forms import PostMarkForm, RegisterIdentityForm
@@ -49,6 +50,7 @@ class IpfsFileNode(ObjectType):
 
 class PostNode(DjangoObjectType):
     file = Field(IpfsFileNode)
+    address = String()
     #TODO votes
     class Meta:
         model = Post
@@ -71,6 +73,10 @@ class PostNode(DjangoObjectType):
         }
         print('resolved file', r)
         return IpfsFileNode(**r)
+
+    def resolve_address(self, info, **kwargs):
+        response_id = standard_b64decode(self.signature)[:32]
+        return '%s/%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
 
 
 class Query(ObjectType):

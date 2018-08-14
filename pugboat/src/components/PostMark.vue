@@ -47,8 +47,7 @@ export default {
       console.log(v)
       console.log(payload)
       let signature = sign(payload)
-      //let signer = decodeBase64(await this.getSigner())
-      let signer = 2;
+      let signer = Buffer.from(await this.getSigner(), 'base64').toString('ascii').split(':')[1];
       await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {

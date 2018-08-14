@@ -170,7 +170,8 @@ def publish_manifest():
     }
     idents = {}
     for post in posts:
-        identity = post.identity
+        post.verify()
+        identity = post.signer
         if identity in idents:
             ident = idents[identity]
         else:
