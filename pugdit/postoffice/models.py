@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from nacl.signing import VerifyKey
-from base64 import b64decode, standard_b64encode
+from base64 import b64decode, standard_b64encode, standard_b64decode
 from functools import lru_cache
 
 #karma:
@@ -92,7 +92,7 @@ class Nexus(models.Model):
 
 
 class Post(models.Model):
-    to = models.CharField(max_length=512, db_index=True)
+    to = models.CharField(max_length=512)
     link = models.CharField(max_length=255, help_text='IPFS url containing the message')
 
     signer = models.ForeignKey(Identity, related_name='posts', on_delete=models.CASCADE)
@@ -104,6 +104,7 @@ class Post(models.Model):
     is_pinned = models.BooleanField(default=False)
     karma = models.IntegerField(default=0)
     chain_level = models.SmallIntegerField(default=0, db_index=True)
+    address = models.CharField(max_length=576, db_index=True, blank=True)
 
     class Meta:
         unique_together = [
@@ -114,7 +115,12 @@ class Post(models.Model):
         return self.signature
 
     def clean(self):
+        print('cleaning')
+        assert self.to, 'to must be set'
         self.chain_level = self.to.count('/')
+        response_id = standard_b64decode(self.signature)[:32]
+        self.address = '%s/%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
+        print('cleaned', self.address)
 
     def verify(self):
         self.signer.verify(b64decode(self.signature))

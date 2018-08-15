@@ -50,16 +50,16 @@ class IpfsFileNode(ObjectType):
 
 class PostNode(DjangoObjectType):
     file = Field(IpfsFileNode)
-    address = String()
     #TODO votes
     class Meta:
         model = Post
         filter_fields = {
             'karma': ['lte', 'gte'],
             'is_pinned': ['exact'],
-            'to': ['startswith', 'exact'],
+            'address': ['startswith', 'exact'],
             'signer': ['exact'],
             'received_timestamp': ['lte', 'gte'],
+            'chain_level': ['exact', 'gte']
         }
         interfaces = (Node, )
 
@@ -73,10 +73,6 @@ class PostNode(DjangoObjectType):
         }
         print('resolved file', r)
         return IpfsFileNode(**r)
-
-    def resolve_address(self, info, **kwargs):
-        response_id = standard_b64decode(self.signature)[:32]
-        return '%s/%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
 
 
 class Query(ObjectType):

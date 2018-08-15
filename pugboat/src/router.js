@@ -1,8 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from './views/Home.vue';
 import Reply from './views/Reply.vue';
 import Profile from './views/Profile.vue';
+import Posts from './views/Posts.vue';
+import FrontPage from './views/FrontPage.vue';
 
 Vue.use(Router);
 
@@ -12,8 +13,14 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home
+      name: 'frontpage',
+      component: FrontPage
+    },
+    {
+      path: '/p/*',
+      name: 'posts',
+      component: Posts,
+      props: (route) => ({location: route.path.substr(3)})
     },
     {
       path: '/profile',

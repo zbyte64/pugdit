@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-slide-y-transition mode="out-in">
       <v-layout column align-center>
-          <Posts/>
+          <Posts :location="location"/>
       </v-layout>
     </v-slide-y-transition>
   </v-container>
@@ -12,6 +12,9 @@
 import Posts from '../components/Posts.vue';
 
 export default {
+    props: {
+        location: !String
+    },
     components: {
         Posts
     }

@@ -22,17 +22,10 @@ class PostMarkForm(forms.ModelForm):
             print('raw_message', raw_message)
             message = umsgpack.unpackb(raw_message)
             print('unpacked message:', message)
-            cleaned_data['to'], cleaned_data['link'] = message
+            self.instance.to, self.instance.link = message
         except ValueError as error:
             raise forms.ValidationError(str(error))
         return cleaned_data
-
-    def save(self):
-        post = super(PostMarkForm, self).save(commit=False)
-        post.to = self.cleaned_data['to']
-        post.link = self.cleaned_data['link']
-        post.save()
-        return post
 
 
 class RegisterIdentityForm(forms.ModelForm):

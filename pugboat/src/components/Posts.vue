@@ -1,13 +1,5 @@
 <template>
   <div>
-  <div class="location">
-      <v-input v-model="location" label="Location"/>
-  </div>
-  <div class="new-post">
-  <router-link :to="`/reply/${location}`" class="post-reply">
-    <v-btn>Post</v-btn>
-  </router-link>
-  </div>
   <div class="posts">
       <ApolloQuery
         :query="require('../graphql/Posts.gql')"
@@ -15,22 +7,25 @@
       >
         <div slot-scope="{ result: { data } }">
           <template v-if="data">
-            <div
-              v-for="e of data.allPosts.edges"
-              :key="e.node.id"
-              class="post"
-            >
-                <div class="post-to">{{e.node.to}}</div>
-                <div class="post-signer">{{e.node.signer.id}}</div>
-                <div class="post-link">{{e.node.link}}</div>
-                <div v-if="e.node.file">
-                    <div class="post-content-type">{{e.node.file.contentType}}</div>
-                    <div class="post-content">{{e.node.file.content|sanitize}}</div>
-                </div>
-                <router-link :to="`/reply/${e.node.address}`" class="post-reply">
-                  <v-btn>Reply</v-btn>
-                </router-link>
-            </div>
+              <v-list>
+              <v-list-tile
+                v-for="e of data.allPosts.edges"
+                :key="e.node.id"
+                class="post"
+              >
+                  <!--div class="post-to">{{e.node.to}}</div-->
+                  <v-list-tile-avatar class="post-signer">{{e.node.signer.id}}</v-list-tile-avatar>
+                  <!--div class="post-link">{{e.node.link}}</div-->
+                  <v-list-tile-content v-if="e.node.file">
+                      <div class="post-content">{{e.node.file.content|sanitize}}</div>
+                  </v-list-tile-content>
+                  <v-list-tile-action>
+                      <router-link :to="`/reply/${e.node.address}`" class="post-reply">
+                        <v-btn>Reply</v-btn>
+                      </router-link>
+                  </v-list-tile-action>
+              </v-list-tile>
+              </v-list>
           </template>
         </div>
       </ApolloQuery>
@@ -43,10 +38,8 @@ import sanitizeHtml from 'sanitize-html';
 
 export default {
   name: 'Posts',
-  data () {
-    return {
-        location: ''
-    }
+  props: {
+    location: !String
   },
   computed: {
   },
