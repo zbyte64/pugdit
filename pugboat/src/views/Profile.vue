@@ -72,6 +72,7 @@ export default {
             })
             let token = response.data.token;
             window.localStorage.setItem('apollo-token', token);
+            this.$router.push({ path: `/profile`})
         },
         async registerIdentity () {
           let {public_key, signed_username} = newIdentity(this.$data.username);
@@ -84,6 +85,7 @@ export default {
                 publicKey: public_key,
             }
           })
+          this.$router.push({ path: `/profile`})
         }
     }
 }

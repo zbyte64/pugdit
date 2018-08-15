@@ -48,7 +48,7 @@ export default {
       console.log(payload)
       let signature = sign(payload)
       let signer = Buffer.from(await this.getSigner(), 'base64').toString('ascii').split(':')[1];
-      await this.$apollo.mutate({
+      let result = await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {
             //to: this.$props.to,
@@ -59,6 +59,9 @@ export default {
       })
       this.$data.link = link
       this.$data.signature = signature
+      console.log(result)
+      let address = result.data.postMark.post.address
+      this.$router.push({ path: `/p/${address}`})
     },
     async getSigner() {
       //TODO dont assume its the first identity signing

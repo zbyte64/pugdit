@@ -1,7 +1,7 @@
 <template>
   <div>
   <div class="location">
-      <v-input v-model="location" label="Location"/>
+      <v-text-field v-model="location" label="Location"/>
   </div>
   <div class="new-post" v-if="location">
   <router-link :to="`/reply/${location}`" class="post-reply">

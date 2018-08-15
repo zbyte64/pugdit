@@ -46,8 +46,6 @@ class IpfsFileNode(ObjectType):
         interfaces = (Node, )
 
 
-
-
 class PostNode(DjangoObjectType):
     file = Field(IpfsFileNode)
     #TODO votes
@@ -114,6 +112,9 @@ class PostMarkMutation(DjangoModelFormMutation):
 
     @classmethod
     def perform_mutate(cls, form, info):
+        onfile = Post.objects.filter(to=form.instance.to, link=form.instance.link, signer=form.cleaned_data['signer']).first()
+        if onfile:
+            return cls(errors=[], post=onfile)
         obj = form.save()
         print('postmark saved:', obj)
         return cls(errors=[], post=obj)
