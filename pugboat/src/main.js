@@ -8,8 +8,10 @@ import store from './store';
 import wysiwyg from "vue-wysiwyg";
 import VueResource from 'vue-resource';
 import Cookies from 'js-cookie';
+import Gravatar from 'vue-gravatar';
 
 Vue.use(VueResource);
+Vue.component('v-gravatar', Gravatar);
 
 var csrftoken = Cookies.get('csrftoken');
 Vue.http.headers.common['X_CSRFTOKEN'] = csrftoken;

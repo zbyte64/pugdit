@@ -14,7 +14,9 @@
                 class="post"
               >
                   <!--div class="post-to">{{e.node.to}}</div-->
-                  <v-list-tile-avatar class="post-signer">{{e.node.signer.id}}</v-list-tile-avatar>
+                  <v-list-tile-avatar class="post-signer">
+                      <v-gravatar :hash="e.node.signer.public_key" />
+                  </v-list-tile-avatar>
                   <!--div class="post-link">{{e.node.link}}</div-->
                   <v-list-tile-content v-if="e.node.file">
                       <div class="post-content">{{e.node.file.content|sanitize}}</div>
