@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 Django = "==2.0.4"
-"graphene-django" = {git='https://github.com/jayhale/graphene-django.git', ref='django-filter-2', editable=true}
+"graphene-django" = {git='https://github.com/zbyte64/graphene-django.git', ref='master', editable=true}
 "django-filter" = "==2.0.0"
 "django-backblazeb2-storage" = "*"
 django-environ = "*"

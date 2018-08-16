@@ -1,5 +1,5 @@
 mutation login($username: String!, $password: String!) {
   authentication(input: {username:$username, password: $password}) {
-    clientMutationId
+    clientMutationId, user {id, username, email, isStaff, identities {id, publickKey}}
   }
 }

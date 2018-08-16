@@ -5,6 +5,7 @@ query posts($location: String) {
       signer {id}
       link
       address
+      karma
       file {
         content
         contentType

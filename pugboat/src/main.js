@@ -13,7 +13,7 @@ import Gravatar from 'vue-gravatar';
 Vue.use(VueResource);
 Vue.component('v-gravatar', Gravatar);
 
-var csrftoken = Cookies.get('csrftoken');
+const csrftoken = Cookies.get('csrftoken');
 Vue.http.headers.common['X_CSRFTOKEN'] = csrftoken;
 
 Vue.use(wysiwyg, {

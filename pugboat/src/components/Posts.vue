@@ -13,6 +13,15 @@
                 :key="e.node.id"
                 class="post"
               >
+                  <v-list-tile-action >
+                      <v-btn flat icon color="blue lighten-2" @click="voteUp(e.node)">
+                        <v-icon>thumb_up</v-icon>
+                      </v-btn>
+                      <v-subheader>{{e.node.karma}}</v-subheader>
+                      <v-btn flat icon color="red lighten-2" @click="voteDown(e.node)">
+                        <v-icon>thumb_down</v-icon>
+                      </v-btn>
+                  </v-list-tile-action>
                   <!--div class="post-to">{{e.node.to}}</div-->
                   <v-list-tile-avatar class="post-signer">
                       <v-gravatar :hash="e.node.signer.public_key" />
@@ -37,6 +46,7 @@
 
 <script>
 import sanitizeHtml from 'sanitize-html';
+import VOTE from '../graphql/Vote.gql'
 
 export default {
   name: 'Posts',
@@ -47,6 +57,21 @@ export default {
   },
 
   methods: {
+      async vote(post, karma) {
+          await this.$apollo.mutate({
+            mutation: VOTE,
+            variables: {
+                post: post.id,
+                karma,
+            }
+          })
+      },
+      async voteUp(post) {
+          await this.vote(post, 1)
+      },
+      async voteDown(post) {
+          await this.vote(post, -1)
+      },
   },
   filters: {
     sanitize: function (value) {

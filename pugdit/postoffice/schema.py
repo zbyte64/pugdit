@@ -2,14 +2,14 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.forms.mutation import DjangoModelFormMutation, DjangoFormMutation
 from graphene.relay import Node
-from graphene import ObjectType, Schema, Field, String, Int
+from graphene import ObjectType, Schema, Field, String, Int, List
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
 from base64 import standard_b64decode, standard_b64encode
 
 from .models import Nexus, Identity, Post, Vote
-from .forms import PostMarkForm, RegisterIdentityForm
+from .forms import PostMarkForm, RegisterIdentityForm, VoteForm
 
 
 class NexusNode(DjangoObjectType):
@@ -27,8 +27,13 @@ class IdentityNode(DjangoObjectType):
 
 
 class AuthUserNode(DjangoObjectType):
+    identities = List(IdentityNode)
     class Meta:
         model = User
+
+    def resolve_identities(self, info, **kwargs):
+        print(self, info, kwargs)
+        return self.identity_set.all()
 
 
 class VoteNode(DjangoObjectType):
@@ -168,10 +173,35 @@ class AuthenticationMutation(DjangoFormMutation):
         return cls(errors=[])#, **kwargs)
 
 
+class VoteMutation(DjangoModelFormMutation):
+    class Meta:
+        form_class = VoteForm
+
+    @classmethod
+    def get_form_kwargs(cls, root, info, **input):
+        user = info.context.user
+        post = input['post']
+        instance = Vote.objects.filter(post=post, user=user).first()
+        kwargs = {
+            "data": input,
+            "instance": instance,
+        }
+        return kwargs
+
+    @classmethod
+    def perform_mutate(cls, form, info):
+        user = info.context.user
+        obj = form.save(commit=False)
+        obj.user = user
+        obj.save()
+        return cls(errors=[], vote=obj)
+
+
 class Mutation(ObjectType):
     authentication = AuthenticationMutation.Field()
     post_mark = PostMarkMutation.Field()
     register_identity = RegisterIdentityMutation.Field()
+    vote = VoteMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)
