@@ -1,84 +1,68 @@
 <template>
-  <div>
   <div class="posts">
-      <ApolloQuery
-        :query="require('../graphql/Posts.gql')"
-        :variables="{location}"
-      >
-        <div slot-scope="{ result: { data } }">
-          <template v-if="data">
-              <v-list>
-              <v-list-tile
-                v-for="e of data.allPosts.edges"
-                :key="e.node.id"
-                class="post"
-              >
-                  <v-list-tile-action >
-                      <v-btn flat icon color="blue lighten-2" @click="voteUp(e.node)">
-                        <v-icon>thumb_up</v-icon>
-                      </v-btn>
-                      <v-subheader>{{e.node.karma}}</v-subheader>
-                      <v-btn flat icon color="red lighten-2" @click="voteDown(e.node)">
-                        <v-icon>thumb_down</v-icon>
-                      </v-btn>
-                  </v-list-tile-action>
-                  <!--div class="post-to">{{e.node.to}}</div-->
-                  <v-list-tile-avatar class="post-signer">
-                      <v-gravatar :hash="e.node.signer.public_key" />
-                  </v-list-tile-avatar>
-                  <!--div class="post-link">{{e.node.link}}</div-->
-                  <v-list-tile-content v-if="e.node.file">
-                      <div class="post-content">{{e.node.file.content|sanitize}}</div>
-                  </v-list-tile-content>
-                  <v-list-tile-action>
-                      <router-link :to="`/reply/${e.node.address}`" class="post-reply">
-                        <v-btn>Reply</v-btn>
-                      </router-link>
-                  </v-list-tile-action>
-              </v-list-tile>
-              </v-list>
+        <v-list v-if="!isLoading">
+          <template v-for="post in posts">
+              <Post :post="post" :key="post.id" />
           </template>
-        </div>
-      </ApolloQuery>
-  </div>
+        </v-list>
   </div>
 </template>
 
 <script>
-import sanitizeHtml from 'sanitize-html';
-import VOTE from '../graphql/Vote.gql'
+import POSTS from '../graphql/Posts.gql'
+import Post from './Post.vue'
+import _ from 'lodash'
 
 export default {
   name: 'Posts',
   props: {
     location: !String
   },
-  computed: {
+  components: {
+      Post,
   },
-
-  methods: {
-      async vote(post, karma) {
-          await this.$apollo.mutate({
-            mutation: VOTE,
-            variables: {
-                post: post.id,
-                karma,
-            }
-          })
-      },
-      async voteUp(post) {
-          await this.vote(post, 1)
-      },
-      async voteDown(post) {
-          await this.vote(post, -1)
-      },
-  },
-  filters: {
-    sanitize: function (value) {
-      if (!value) return ''
-      value = value.toString()
-      return sanitizeHtml(value)
+  data() {
+    return {
+        isLoading: true,
+        posts: null
     }
+  },
+  created() {
+      this.postTree().then(roots => {
+          this.posts = roots
+          this.isLoading = false
+      })
+  },
+  methods: {
+      async postTree() {
+        let results = await this.$apollo.query({
+          query: POSTS,
+          variables: {
+              location: this.$props.location,
+          }
+        })
+        let edges = _.cloneDeep(results.data.allPosts.edges)
+        let lookup = _.keyBy(edges, e => e.node.address)
+        let roots = []
+        let depth =  (this.$props.location.match(/\//g)||[]).length
+        _.map(edges, function (edge) {
+            let post = edge.node
+            if (post.chainLevel > depth) {
+                let parent = lookup[post.to]
+                if (parent) {
+                    parent = parent.node //TODO do this during keyBy
+                    if (!parent.children) {
+                        parent.children = []
+                    }
+                    parent.children.push(post)
+                }
+            } else {
+                roots.push(post)
+            }
+        })
+        console.log(results, roots, lookup)
+        return roots
+      }
   }
 }
 </script>

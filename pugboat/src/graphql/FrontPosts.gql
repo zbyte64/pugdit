@@ -2,9 +2,10 @@ query posts($location: String) {
   allPosts(address_Startswith: $location, chainLevel: 0) { edges { node {
       id
       to
-      signer {id}
+      signer {id, publicKey}
       link
       address
+      chainLevel
       file {
         content
         contentType

@@ -69,7 +69,7 @@ export default {
         query: AUTH_SELF,
       })
       console.log(r)
-      return r.data.authUser.identitySet.edges[0].node.id
+      return r.data.authUser.identities[0].id
     }
   }
 }
