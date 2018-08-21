@@ -48,6 +48,7 @@
 
 <script>
 import REGISTER_IDENTITY from '../graphql/RegisterIdentity.gql'
+import LOGIN from '../graphql/Login.gql'
 import {newIdentity, loadKey} from '../mailbox.js';
 
 export default {
@@ -66,12 +67,21 @@ export default {
             this.$data.username = user.username
         },
         async login() {
+            await this.$apollo.mutate({
+              mutation: LOGIN,
+              variables: {
+                  username: this.$data.username,
+                  password: this.$data.password,
+              }
+            })
+            /*
             let response = await this.$http.post('/api/token-auth/', {
                 username: this.$data.username,
                 password: this.$data.password,
             })
             let token = response.data.token;
             window.localStorage.setItem('apollo-token', token);
+            */
             this.$router.push({ path: `/profile`})
         },
         async registerIdentity () {
