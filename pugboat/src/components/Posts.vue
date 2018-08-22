@@ -1,10 +1,8 @@
 <template>
-  <div class="posts">
-        <v-list v-if="!isLoading">
-          <template v-for="post in posts">
-              <Post :post="post" :key="post.id" />
-          </template>
-        </v-list>
+  <div>
+  <template v-for="post in posts" v-if="!isLoading">
+      <Post :post="post" :key="post.id" />
+  </template>
   </div>
 </template>
 

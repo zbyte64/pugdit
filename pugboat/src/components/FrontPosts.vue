@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-container>
   <div class="location">
       <v-text-field v-model="location" label="Location"/>
   </div>
@@ -8,17 +8,15 @@
     <v-btn>Post</v-btn>
   </router-link>
   </div>
-  <div class="posts">
-      <ApolloQuery
-        :query="require('../graphql/FrontPosts.gql')"
-        :variables="{location}"
-      >
-        <div slot-scope="{ result: { data } }" v-if="data">
-          <Post :post="e.node" v-for="e of data.allPosts.edges" @click="viewPost(e.node)" :key="e.node.id"/>
-        </div>
-      </ApolloQuery>
-  </div>
-  </div>
+  <ApolloQuery
+    :query="require('../graphql/FrontPosts.gql')"
+    :variables="{location}"
+  >
+    <v-layout slot-scope="{ result: { data } }" v-if="data">
+      <Post :post="e.node" v-for="e of data.allPosts.edges" @click="viewPost(e.node)" :key="e.node.id"/>
+  </v-layout>
+  </ApolloQuery>
+  </v-container>
 </template>
 
 <script>

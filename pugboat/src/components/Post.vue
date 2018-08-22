@@ -1,8 +1,9 @@
 <template>
     <div>
+    <v-flex xs12 sm6>
     <v-card :href="`/p/${this.post.address}`">
       <template v-if="post.file">
-          <v-card-media v-if="isImage" :src="`data:${post.file.contentType};base64, ${post.file.content}`" height="300px"/>
+          <v-card-media contain v-if="isImage" :src="`data:${post.file.contentType};base64, ${post.file.content}`" height="300px"/>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
       <!--div class="post-to">{{post.to}}</div-->
@@ -23,6 +24,7 @@
           </router-link>
       </v-card-actions>
   </v-card>
+  </v-flex>
   <template v-for="replyPost in post.children">
       <Post :post="replyPost" :key="replyPost.id" />
   </template>
