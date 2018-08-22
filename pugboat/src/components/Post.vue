@@ -1,73 +1,40 @@
-<template>
-    <div>
-    <v-flex xs12 sm6>
-    <v-card :to="`/p/${this.post.address}`">
-      <template v-if="post.file">
-          <v-card-media contain v-if="isImage" :src="`data:${post.file.contentType};base64, ${post.file.content}`" height="300px"/>
-          <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
-      </template>
-      <!--div class="post-to">{{post.to}}</div-->
-      <v-card-title primary-title class="post-signer">
-          <v-gravatar :hash="post.signer.publicKey" />
-          <v-subheader>Karma: {{post.karma}}</v-subheader>
-      </v-card-title>
-      <!--div class="post-link">{{post.link}}</div-->
-      <v-card-actions>
-          <v-btn flat icon color="blue lighten-2" @click.prevent="vote(1)">
-            <v-icon>thumb_up</v-icon>
-          </v-btn>
-          <v-btn flat icon color="red lighten-2" @click.prevent="vote(-1)">
-            <v-icon>thumb_down</v-icon>
-          </v-btn>
-          <router-link :to="`/reply/${post.address}`" class="post-reply">
-            <v-btn>Reply</v-btn>
-          </router-link>
-      </v-card-actions>
-  </v-card>
-  </v-flex>
-  <template v-for="replyPost in post.children">
-      <Post :post="replyPost" :key="replyPost.id" />
-  </template>
-  </div>
-</template>
-
 <script>
-import sanitizeHtml from 'sanitize-html';
-import {getGraphId} from '../mailbox.js'
-import VOTE from '../graphql/Vote.gql'
+import CorePost from './CorePost.vue'
 import _ from 'lodash'
 
 export default {
   name: 'Post',
+  components: {
+      CorePost
+  },
   props: {
     post: !Object
   },
-  computed: {
-    isImage() {
-        return _.startsWith(this.post.file.contentType, 'image')
-    }
-  },
-  methods: {
-      async vote(karma) {
-          await this.$apollo.mutate({
-            mutation: VOTE,
-            variables: {
-                post: getGraphId(this.post.id),
-                karma,
+  render: function(createElement) {
+    let makeTile = (post) => {
+        let postElem = createElement(CorePost, {
+            props: {
+                post: this.post
             }
-          })
-      },
-      viewPost() {
-          this.$router.push({ path: `/p/${this.post.address}`})
-      },
-      sanitize: function (value) {
-        if (!value) return ''
-        value = value.toString()
-        return sanitizeHtml(value, {
-          //allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
         })
-      },
-  },
+        return createElement(
+           'v-flex', {'class': {'xs4': true}}, [postElem]
+        )
+    }
+    let makeTiles = (post) => {
+        let tiles = [makeTile(post)]
+        if (post.children) {
+            tiles = _.concat(tiles, _.map(makeTiles, post.children))
+        }
+        return tiles
+    }
+    if (this.post.children) {
+        let tiles = makeTiles(this.post)
+        return createElement('template', tiles)
+    } else {
+        return makeTile(this.post)
+    }
+  }
 }
 </script>
 
