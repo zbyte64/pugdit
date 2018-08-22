@@ -6,7 +6,9 @@ from graphene import ObjectType, Schema, Field, String, Int, List
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
+from django.conf import settings
 from base64 import standard_b64decode, standard_b64encode
+import requests
 
 from .models import Nexus, Identity, Post, Vote
 from .forms import PostMarkForm, RegisterIdentityForm, VoteForm
@@ -67,14 +69,18 @@ class PostNode(DjangoObjectType):
         interfaces = (Node, )
 
     def resolve_file(self, info, **kwargs):
-        from .mailtruck import client
-        r = client.cat(self.link).decode('utf8')
+        response = requests.get(settings.IPFS_URL + self.link)
+        h = response.headers
+        if h['Content-Type'].startswith('text'):
+            c = response.text
+        else:
+            c = standard_b64encode(response.content).decode('utf8')
         r = {
-            'content': r,
-            'size': len(r),
-            'content_type': 'text/html'
+            'content': c,
+            'size': h['Content-Length'],
+            'content_type': h['Content-Type']
         }
-        print('resolved file', r)
+        #print('resolved file', r)
         return IpfsFileNode(**r)
 
 

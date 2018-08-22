@@ -20,8 +20,8 @@ def add_asset(request):
         data = json.loads(request.body)
         filename = data['filename']
         file_o = data['content'].encode('utf8')
-    asset = pin_asset(file_o, filename=filename, user=request.user)
-    return HttpResponse(asset.get_absolute_url())
+    asset, ipfs_path = pin_asset(file_o, filename=filename, user=request.user)
+    return HttpResponse(ipfs_path)
 
 
 def add_assets(request):
@@ -43,9 +43,16 @@ def pin_asset(upload, filename, user):
             else:
                 destination.write(upload)
         #TODO don't assume first is the file, make path instead
-        add_result = client.add(destination_path, wrap_with_directory=True)[0]
+        add_results = client.add(destination_path, wrap_with_directory=True)
+        print('add_results:', add_results)
+        path = [o['Name'] or o['Hash'] for o in add_results]
+        ipfs_path = '/ipfs/' + '/'.join(reversed(path))
+        add_result = add_results[0]
     print(add_result)
     asset, _c = Asset.objects.get_or_create(ipfs_hash=add_result['Hash'])
     asset.users.add(user)
     #TODO add paths
-    return asset
+    if ipfs_path not in asset.ipfs_paths:
+        asset.ipfs_paths.append(ipfs_path)
+        asset.save()
+    return asset, ipfs_path
