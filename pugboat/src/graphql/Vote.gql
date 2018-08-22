@@ -1,5 +1,5 @@
 mutation vote ($post: ID!, $karma: Int!) {
   vote (input: {post: $post, karma: $karma}) {
-    vote {id, post { id, address}, karma}
+    vote {id, post { id, karma}, karma}
   }
 }

@@ -17,7 +17,7 @@
 <script>
 import POST_MARK from '../graphql/PostMark.gql'
 import AUTH_SELF from '../graphql/AuthSelf.gql'
-import {sign, decodeBase64} from '../mailbox.js'
+import {sign, getGraphId} from '../mailbox.js'
 import UploadButton from 'vuetify-upload-button';
 import msgpack from 'msgpack-lite'
 
@@ -87,7 +87,7 @@ export default {
       console.log(v)
       console.log(payload)
       let signature = sign(payload)
-      let signer = Buffer.from(await this.getSigner(), 'base64').toString('ascii').split(':')[1];
+      let signer = getGraphId(await this.getSigner());
       let result = await this.$apollo.mutate({
         mutation: POST_MARK,
         variables: {

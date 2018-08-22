@@ -66,3 +66,7 @@ export function sign(message) {
   let b = nacl.sign(payload, key);
   return encodeBase64(b);
 }
+
+export function getGraphId(bytes) {
+  return Buffer.from(bytes, 'base64').toString('ascii').split(':')[1];
+}

@@ -1,7 +1,7 @@
 <template>
     <div>
     <v-flex xs12 sm6>
-    <v-card :href="`/p/${this.post.address}`">
+    <v-card :to="`/p/${this.post.address}`">
       <template v-if="post.file">
           <v-card-media contain v-if="isImage" :src="`data:${post.file.contentType};base64, ${post.file.content}`" height="300px"/>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
@@ -13,10 +13,10 @@
       </v-card-title>
       <!--div class="post-link">{{post.link}}</div-->
       <v-card-actions>
-          <v-btn flat icon color="blue lighten-2" @click="vote(1)">
+          <v-btn flat icon color="blue lighten-2" @click.prevent="vote(1)">
             <v-icon>thumb_up</v-icon>
           </v-btn>
-          <v-btn flat icon color="red lighten-2" @click="vote(-1)">
+          <v-btn flat icon color="red lighten-2" @click.prevent="vote(-1)">
             <v-icon>thumb_down</v-icon>
           </v-btn>
           <router-link :to="`/reply/${post.address}`" class="post-reply">
@@ -33,6 +33,7 @@
 
 <script>
 import sanitizeHtml from 'sanitize-html';
+import {getGraphId} from '../mailbox.js'
 import VOTE from '../graphql/Vote.gql'
 import _ from 'lodash'
 
@@ -51,7 +52,7 @@ export default {
           await this.$apollo.mutate({
             mutation: VOTE,
             variables: {
-                post: this.post.id,
+                post: getGraphId(this.post.id),
                 karma,
             }
           })
@@ -63,7 +64,7 @@ export default {
         if (!value) return ''
         value = value.toString()
         return sanitizeHtml(value, {
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
+          //allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
         })
       },
   },

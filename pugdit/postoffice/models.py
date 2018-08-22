@@ -131,7 +131,7 @@ class Vote(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
         related_name='votes', on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    karma = models.SmallIntegerField()
+    karma = models.SmallIntegerField(default=0)
 
     class Meta:
         unique_together = [

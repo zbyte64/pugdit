@@ -2,7 +2,7 @@
   <v-container fluid grid-list-lg>
     <v-slide-y-transition>
       <v-layout row wrap>
-          <Posts :location="location"/>
+          <Posts :location="location" :key="location"/>
       </v-layout>
     </v-slide-y-transition>
   </v-container>
