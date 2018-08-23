@@ -22,7 +22,6 @@ from django.conf import settings
 from graphene_django.views import GraphQLView
 from django.views.decorators.csrf import csrf_exempt
 from revproxy.views import ProxyView
-from rest_framework_jwt.views import obtain_jwt_token
 
 from .postoffice.schema import schema
 from .postoffice.views import add_asset
@@ -39,7 +38,6 @@ urlpatterns = [
     #TODO big "cross site" scripting security hole
     re_path(r'^ipfs/(?P<path>.*)$', ProxyView.as_view(upstream=settings.IPFS_URL + '/ipfs/')),
     path('api/add-asset/', add_asset),
-    path('api/token-auth/', obtain_jwt_token),
 
     # other views still work too
     path('admin/', admin.site.urls),
