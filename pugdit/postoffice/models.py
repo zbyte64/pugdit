@@ -110,6 +110,7 @@ class Post(models.Model):
         unique_together = [
             ('to', 'link', 'signer'),
         ]
+    SIGNATURE_SIZE = 44
 
     def __str__(self):
         return self.signature
@@ -117,9 +118,15 @@ class Post(models.Model):
     def clean(self):
         print('cleaning')
         assert self.to, 'to must be set'
-        self.chain_level = self.to.count('/')
+        topic_end = self.to.find('/')
+        if topic_end == -1:
+            self.chain_level = 0
+        else:
+            topic_end += 1
+            self.chain_level, _size_flag = divmod(len(self.to) - topic_end, self.SIGNATURE_SIZE)
+            assert not _size_flag, '`to` without topic must be divisible by signature size'
         response_id = standard_b64decode(self.signature)[:32]
-        self.address = '%s/%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
+        self.address = '%s%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
         print('cleaned', self.address)
 
     def verify(self):

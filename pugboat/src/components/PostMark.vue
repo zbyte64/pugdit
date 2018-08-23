@@ -1,5 +1,6 @@
 <template>
   <div class="post-mark">
+    <v-alert type="error" :value="error&&1">{{error}}</v-alert>
     <v-radio-group v-model="postType">
       <v-radio label="Compose" value="newPost"/>
       <v-radio label="Image" value="newImage"/>
@@ -35,6 +36,7 @@ export default {
       newMessage: '',
       link: '',
       signature: '',
+      error: null,
     }
   },
 
@@ -57,6 +59,12 @@ export default {
   },
   methods: {
     async submit() {
+        this.error = null
+        await this._submit().catch(error => {
+            this.error = error
+        })
+    },
+    async _submit() {
         switch(this.$data.postType) {
           case 'newPost':
             return await this.uploadMessage()

@@ -22,6 +22,7 @@
               <v-btn v-if="!data.authUser.identities.length || !key" @click="registerIdentity">Register Identity</v-btn>
               </template>
               <template v-else>
+                  <v-alert type="error" :value="error&&1">{{error}}</v-alert>
                   <v-form v-on:submit.prevent="login">
                     <v-text-field
                       v-model="username"
@@ -56,7 +57,8 @@ export default {
         return {
             key: loadKey(),
             username: '',
-            password: ''
+            password: '',
+            error: null
         }
     },
     methods: {
@@ -67,22 +69,19 @@ export default {
             this.$data.username = user.username
         },
         async login() {
-            await this.$apollo.mutate({
+          this.error = null
+          await this.$apollo.mutate({
               mutation: LOGIN,
               variables: {
                   username: this.$data.username,
                   password: this.$data.password,
               }
-            })
-            /*
-            let response = await this.$http.post('/api/token-auth/', {
-                username: this.$data.username,
-                password: this.$data.password,
-            })
-            let token = response.data.token;
-            window.localStorage.setItem('apollo-token', token);
-            */
-            this.$router.push({ path: `/profile`})
+          }).then(() => {
+              this.$router.push({ path: `/profile`})
+          }).catch(error => {
+              this.error = error
+              console.log(error)
+          })
         },
         async registerIdentity () {
           let {public_key, signed_username} = newIdentity(this.$data.username);

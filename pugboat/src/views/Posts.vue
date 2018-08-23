@@ -43,7 +43,9 @@ export default {
           let edges = _.cloneDeep(results.data.allPosts.edges)
           let lookup = _.keyBy(edges, e => e.node.address)
           let roots = []
-          let depth =  (this.$props.location.match(/\//g)||[]).length
+          let topic_end = this.$props.location.indexOf('/')
+          topic_end += 1
+          let depth = Math.floor((this.$props.location.length - topic_end) / 44)
           _.map(edges, function (edge) {
               let post = edge.node
               if (post.chainLevel > depth) {
