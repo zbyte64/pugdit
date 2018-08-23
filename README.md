@@ -12,3 +12,10 @@ To get started with development, use docker compose:
 
     docker-compose up
     docker-compose run cli migrate
+    docker-compose run createsuperuser
+
+
+While the docker service is running, also run the yarn dev service:
+
+    cd pugboat
+    yarn serve
