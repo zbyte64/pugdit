@@ -10,20 +10,20 @@
       app
     >
       <v-list>
-        <v-list-tile>
+        <v-list-tile to="/profile">
           <v-list-tile-action>
             <v-icon>bubble_chart</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
-            <v-list-tile-title><router-link to="/profile">Profile</router-link></v-list-tile-title>
+            <v-list-tile-title>Profile</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
-        <v-list-tile>
+        <v-list-tile to="/">
           <v-list-tile-action>
             <v-icon>bubble_chart</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
-            <v-list-tile-title><router-link to="/">Front Page</router-link></v-list-tile-title>
+            <v-list-tile-title>Front Page</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
       </v-list>

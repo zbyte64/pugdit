@@ -17,9 +17,9 @@
           <v-btn flat icon color="red lighten-2" @click.prevent="vote(-1)">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <router-link :to="`/reply/${post.address}`" class="post-reply">
-            <v-btn>Reply</v-btn>
-          </router-link>
+          <v-btn flat icon color="grey" :to="`/reply/${post.address}`">
+            Reply
+          </v-btn>
       </v-card-actions>
   </v-card>
 </template>

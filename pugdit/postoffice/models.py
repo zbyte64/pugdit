@@ -118,15 +118,17 @@ class Post(models.Model):
     def clean(self):
         print('cleaning')
         assert self.to, 'to must be set'
+        response_id = standard_b64decode(self.signature)[:32]
+        encoded_id = standard_b64encode(response_id).decode('utf8')
         topic_end = self.to.find('/')
         if topic_end == -1:
             self.chain_level = 0
+            self.address = '%s/%s' % (self.to, encoded_id)
         else:
             topic_end += 1
             self.chain_level, _size_flag = divmod(len(self.to) - topic_end, self.SIGNATURE_SIZE)
             assert not _size_flag, '`to` without topic must be divisible by signature size'
-        response_id = standard_b64decode(self.signature)[:32]
-        self.address = '%s%s' % (self.to, standard_b64encode(response_id).decode('utf8'))
+            self.address = '%s%s' % (self.to, encoded_id)
         print('cleaned', self.address)
 
     def verify(self):

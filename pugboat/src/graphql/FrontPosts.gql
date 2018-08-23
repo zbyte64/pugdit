@@ -6,6 +6,7 @@ query posts($location: String) {
       link
       address
       chainLevel
+      karma
       file {
         content
         contentType
