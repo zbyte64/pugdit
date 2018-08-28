@@ -30,6 +30,7 @@ from .postoffice.views import add_asset
 admin.autodiscover()
 
 urlpatterns = [
+    path('accounts/', include('allauth.urls')),
     # The following SPA settings are handled in Django-SPA
     # - everything not matched in Django's urlpatterns goes to /
     # - index.html served on /

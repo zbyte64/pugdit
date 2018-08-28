@@ -17,6 +17,7 @@ env = environ.Env( # set default values and casting
     DEBUG=(bool, False),
     DEPLOYMENT=(str, 'prod'),
     SECRET_KEY=(str, 'h4@c1x9okapu5^#iurp21i(vn14s5c#1lqx!$k-#^v%rd#rn!b'),
+    SITE_ID=(int, 1),
 )
 
 # Build paths inside the project like this: base('desired/local/path')
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'rest_framework',
@@ -64,13 +66,88 @@ INSTALLED_APPS = [
     'django_extensions',
 
     'pugdit.postoffice',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # ... include the providers you want to enable:
+    'allauth.socialaccount.providers.agave',
+    'allauth.socialaccount.providers.amazon',
+    'allauth.socialaccount.providers.angellist',
+    'allauth.socialaccount.providers.asana',
+    'allauth.socialaccount.providers.auth0',
+    'allauth.socialaccount.providers.authentiq',
+    'allauth.socialaccount.providers.baidu',
+    'allauth.socialaccount.providers.basecamp',
+    'allauth.socialaccount.providers.bitbucket',
+    'allauth.socialaccount.providers.bitbucket_oauth2',
+    'allauth.socialaccount.providers.bitly',
+    'allauth.socialaccount.providers.cern',
+    'allauth.socialaccount.providers.coinbase',
+    'allauth.socialaccount.providers.dataporten',
+    'allauth.socialaccount.providers.daum',
+    'allauth.socialaccount.providers.digitalocean',
+    'allauth.socialaccount.providers.discord',
+    'allauth.socialaccount.providers.disqus',
+    'allauth.socialaccount.providers.douban',
+    'allauth.socialaccount.providers.draugiem',
+    'allauth.socialaccount.providers.dropbox',
+    'allauth.socialaccount.providers.dwolla',
+    'allauth.socialaccount.providers.edmodo',
+    'allauth.socialaccount.providers.eveonline',
+    'allauth.socialaccount.providers.evernote',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.feedly',
+    'allauth.socialaccount.providers.fivehundredpx',
+    'allauth.socialaccount.providers.flickr',
+    'allauth.socialaccount.providers.foursquare',
+    'allauth.socialaccount.providers.fxa',
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.gitlab',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.hubic',
+    'allauth.socialaccount.providers.instagram',
+    'allauth.socialaccount.providers.kakao',
+    'allauth.socialaccount.providers.line',
+    'allauth.socialaccount.providers.linkedin',
+    'allauth.socialaccount.providers.linkedin_oauth2',
+    'allauth.socialaccount.providers.mailru',
+    'allauth.socialaccount.providers.mailchimp',
+    'allauth.socialaccount.providers.meetup',
+    'allauth.socialaccount.providers.naver',
+    'allauth.socialaccount.providers.odnoklassniki',
+    'allauth.socialaccount.providers.openid',
+    'allauth.socialaccount.providers.orcid',
+    'allauth.socialaccount.providers.paypal',
+    'allauth.socialaccount.providers.persona',
+    'allauth.socialaccount.providers.pinterest',
+    'allauth.socialaccount.providers.reddit',
+    'allauth.socialaccount.providers.robinhood',
+    'allauth.socialaccount.providers.shopify',
+    'allauth.socialaccount.providers.slack',
+    'allauth.socialaccount.providers.soundcloud',
+    'allauth.socialaccount.providers.spotify',
+    'allauth.socialaccount.providers.stackexchange',
+    'allauth.socialaccount.providers.stripe',
+    'allauth.socialaccount.providers.trello',
+    'allauth.socialaccount.providers.tumblr',
+    'allauth.socialaccount.providers.twentythreeandme',
+    'allauth.socialaccount.providers.twitch',
+    'allauth.socialaccount.providers.twitter',
+    'allauth.socialaccount.providers.untappd',
+    'allauth.socialaccount.providers.vimeo',
+    'allauth.socialaccount.providers.vk',
+    'allauth.socialaccount.providers.weibo',
+    'allauth.socialaccount.providers.weixin',
+    'allauth.socialaccount.providers.windowslive',
+    'allauth.socialaccount.providers.xing',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'spa.middleware.SPAMiddleware',
+    #'spa.middleware.SPAMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware', # early, but after Gzip
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -79,6 +156,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+LOGIN_REDIRECT_URL = '/accounts/login/'
 
 ROOT_URLCONF = 'pugdit.urls'
 
@@ -196,6 +275,14 @@ STATICFILES_STORAGE = 'spa.storage.SPAStaticFilesStorage'
 
 from .logger import LOGGING
 
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
 # Django REST Framework
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -207,11 +294,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
-}
-import datetime
-JWT_AUTH = {
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=60)
 }
 
 # Django debug toolbar
@@ -242,3 +324,4 @@ TEST_RUNNER = 'snapshottest.django.TestRunner'
 SERVICE_BLOCKNAME = 'TODO'
 IPFS_URL = env('IPFS_URL')
 IPFS_API = env('IPFS_API')
+SITE_ID = env('SITE_ID')

@@ -5,13 +5,13 @@ name = "pypi"
 
 [packages]
 Django = "==2.0.4"
+"django-allauth" = "==0.37.1"
 "graphene-django" = {git='https://github.com/zbyte64/graphene-django.git', ref='master', editable=true}
 "django-filter" = "==2.0.0"
 "django-backblazeb2-storage" = "*"
 django-environ = "*"
 django-extensions = "*"
 django-revproxy = "==0.9.15"
-djangorestframework-jwt = "==1.11.0"
 ipython = "*"
 ipdb = "*"
 Pillow = "*"
@@ -27,6 +27,7 @@ gunicorn = "*"
 eventlet = "*"
 ipfsapi = "==0.4.3"
 pynacl = "==1.2.1"
+"u-msgpack-python" = "==2.5.0"
 
 [dev-packages]
 Werkzeug = "*"
@@ -38,7 +39,6 @@ nose = "*"
 coverage = "*"
 "flake8" = "*"
 "snapshottest" = "*"
-"u-msgpack-python" = "==2.5.0"
 
 [requires]
 python_version = "==3.6"
