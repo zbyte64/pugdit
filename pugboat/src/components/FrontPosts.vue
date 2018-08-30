@@ -3,11 +3,19 @@
   <v-flex>
       <v-text-field v-model="location" label="Location"/>
   </v-flex>
-  <v-flex class="new-post" v-if="location">
-  <router-link :to="`/reply/${location}`">
-    <v-btn>Post</v-btn>
-  </router-link>
-  </v-flex>
+  <ApolloQuery
+    :query="require('../graphql/AuthSelf.gql')"
+  >
+    <div slot-scope="{ result: { data } }">
+      <template v-if="data && data.authUser">
+          <v-flex class="new-post" v-if="location">
+              <router-link :to="`/reply/${location}`">
+                <v-btn>Post</v-btn>
+              </router-link>
+          </v-flex>
+      </template>
+    </div>
+  </ApolloQuery>
   <v-flex>
   <ApolloQuery
     :query="require('../graphql/FrontPosts.gql')"

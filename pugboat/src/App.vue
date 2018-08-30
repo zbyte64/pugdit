@@ -52,6 +52,7 @@
       </v-btn>
       <v-toolbar-title><v-btn flat v-text="title" to="/"></v-btn></v-toolbar-title>
       <v-spacer></v-spacer>
+      <auth-status />
     </v-toolbar>
     <v-content>
       <router-view/>
@@ -63,9 +64,13 @@
 </template>
 
 <script>
+import AuthStatus from './components/AuthStatus.vue'
 
 export default {
   name: 'App',
+  components: {
+    AuthStatus,
+  },
   data () {
     return {
       clipped: false,

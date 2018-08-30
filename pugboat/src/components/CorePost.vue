@@ -31,9 +31,17 @@
               <v-icon>thumb_up</v-icon>
             </v-btn>
           <v-spacer/>
-          <v-btn icon color="grey" :to="`/reply/${post.address}`">
-            <v-icon>reply</v-icon>
-          </v-btn>
+          <ApolloQuery
+            :query="require('../graphql/AuthSelf.gql')"
+          >
+            <div slot-scope="{ result: { data } }">
+              <template v-if="data && data.authUser">
+                  <v-btn icon color="grey" :to="`/reply/${post.address}`">
+                    <v-icon>reply</v-icon>
+                  </v-btn>
+              </template>
+            </div>
+          </ApolloQuery>
       </v-card-actions>
   </v-card>
 </template>

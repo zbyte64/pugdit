@@ -48,6 +48,8 @@ export default {
           })
           let edges = _.cloneDeep(results.data.allPosts.edges)
           let lookup = _.keyBy(edges, e => e.node.address)
+          return _.map(edges, e => e.node)
+
           let roots = []
           let topic_end = this.$props.location.indexOf('/')
           topic_end += 1
