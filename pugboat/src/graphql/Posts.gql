@@ -2,7 +2,7 @@ query posts($location: String) {
   allPosts(address_Startswith: $location) { edges { node {
       id
       to
-      signer {id, publicKey}
+      signer {id, publicKey, email}
       link
       address
       karma

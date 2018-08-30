@@ -1,12 +1,12 @@
 <template>
     <v-card :to="`/p/${this.post.address}`" flat tile>
       <template v-if="post.file">
-          <v-card-media contain v-if="isImage" :src="`data:${post.file.contentType};base64, ${post.file.content}`" height="150px"/>
+          <v-card-media contain v-if="isImage" :src="post.link" height="150px"/>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
       <!--div class="post-to">{{post.to}}</div-->
-      <v-card-title primary-title class="post-signer">
-          <v-gravatar :hash="post.signer.publicKey" />
+      <v-card-title>
+          <avatar :user="post.signer" />
           <v-subheader>Karma: {{post.karma}}</v-subheader>
       </v-card-title>
       <!--div class="post-link">{{post.link}}</div-->
@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import Avatar from './Avatar.vue'
 import sanitizeHtml from 'sanitize-html';
 import {getGraphId} from '../mailbox.js'
 import VOTE from '../graphql/Vote.gql'
@@ -34,6 +35,9 @@ export default {
   name: 'CorePost',
   props: {
     post: !Object
+  },
+  components: {
+    Avatar
   },
   computed: {
     isImage() {

@@ -22,10 +22,17 @@ class NexusNode(DjangoObjectType):
 
 
 class IdentityNode(DjangoObjectType):
+    email = String()
+
     class Meta:
         model = Identity
         filter_fields = ['karma', 'is_banned', 'owner']
         interfaces = (Node, )
+
+    def resolve_email(self, info, **kwargs):
+        if self.owner:
+            return self.owner.email
+        return None
 
 
 class AuthUserNode(DjangoObjectType):
@@ -73,8 +80,10 @@ class PostNode(DjangoObjectType):
         h = response.headers
         if h['Content-Type'].startswith('text'):
             c = response.text
+            c = c[:1024*10] #TODO specify max client message length
         else:
-            c = standard_b64encode(response.content).decode('utf8')
+            c = None #only transmit text
+            #c = standard_b64encode(response.content).decode('utf8')
         r = {
             'content': c,
             'size': h['Content-Length'],
