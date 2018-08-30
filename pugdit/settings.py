@@ -96,7 +96,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.edmodo',
     'allauth.socialaccount.providers.eveonline',
     'allauth.socialaccount.providers.evernote',
-    'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.feedly',
     'allauth.socialaccount.providers.fivehundredpx',
     'allauth.socialaccount.providers.flickr',
@@ -248,7 +247,10 @@ try:
     EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
     # or sendgrid.EmailBackend, or...
 except ImproperlyConfigured:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_CONFIG = env.email_url(
+        'EMAIL_URL', default='consolemail://')
+    vars().update(EMAIL_CONFIG)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
