@@ -1,19 +1,7 @@
+#import "./PostFragment.gql"
+
 query posts($location: String) {
   allPosts(address_Startswith: $location) { edges { node {
-      id
-      to
-      signer {id, publicKey, email}
-      link
-      address
-      karma
-      chainLevel
-      file {
-        content
-        contentType
-        size
-      }
-      userVote {
-        id, karma
-      }
+      ...Post
   }}}
 }

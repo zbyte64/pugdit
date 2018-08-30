@@ -1,7 +1,17 @@
-fragment post on Post {
-  id
-  to
-  signer {id}
-  link
-  timestamp
+fragment Post on PostNode {
+    id
+    to
+    signer {id, publicKey, email}
+    link
+    address
+    karma
+    chainLevel
+    file {
+      content
+      contentType
+      size
+    }
+    userVote {
+      id, karma
+    }
 }
