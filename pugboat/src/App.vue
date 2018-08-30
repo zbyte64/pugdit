@@ -42,7 +42,7 @@
       <v-btn icon @click.stop="fixed = !fixed">
         <v-icon>remove</v-icon>
       </v-btn>
-      <v-toolbar-title v-text="title"></v-toolbar-title>
+      <v-toolbar-title><v-btn flat v-text="title" to="/"></v-btn></v-toolbar-title>
       <v-spacer></v-spacer>
     </v-toolbar>
     <v-content>

@@ -1,12 +1,12 @@
 <template>
-  <v-layout column>
-      <Post :post="rootPost" v-if="rootPost !== null"/>
   <v-container fluid grid-list-sm>
+      <v-slide-y-transition>
       <v-layout row wrap>
           <template v-for="post in posts" v-if="!isLoading">
-              <Post :post="post" :key="post.id" v-if="post.address !== location"/>
+              <Post class="xs8 md6" :post="post" :key="post.id"/>
           </template>
       </v-layout>
+      </v-slide-y-transition>
   </v-container>
   </v-layout>
 </template>
@@ -27,7 +27,6 @@ export default {
       return {
           isLoading: true,
           posts: null,
-          rootPost: null
       }
     },
     created() {
@@ -38,7 +37,6 @@ export default {
             return this.postTree().then(roots => {
                 this.posts = roots
                 this.isLoading = false
-                this.rootPost = _.find(roots, {address: this.location})
             })
         },
         async postTree() {
@@ -54,6 +52,7 @@ export default {
           let topic_end = this.$props.location.indexOf('/')
           topic_end += 1
           let depth = Math.floor((this.$props.location.length - topic_end) / 44)
+          if (depth < 1) depth = 1;
           _.map(edges, function (edge) {
               let post = edge.node
               if (post.chainLevel > depth) {

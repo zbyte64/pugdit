@@ -10,6 +10,7 @@
   "dependencies": {
     "apollo-cache-inmemory": "^1.2.7",
     "js-cookie": "^2.2.0",
+    "moment": "^2.22.2",
     "msgpack-lite": "^0.1.26",
     "node-rsa": "^1.0.1",
     "sanitize-html": "^1.18.4",

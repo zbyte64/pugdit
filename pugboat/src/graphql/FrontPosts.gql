@@ -3,5 +3,6 @@
 query posts($location: String) {
   allPosts(address_Startswith: $location, chainLevel: 0) { edges { node {
       ...Post
+      responseCount
   }}}
 }

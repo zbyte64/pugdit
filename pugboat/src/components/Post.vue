@@ -11,28 +11,30 @@ export default {
     post: !Object
   },
   render: function(createElement) {
-    let makeTile = (post) => {
+    let makeTile = (post, classes) => {
         let postElem = createElement(CorePost, {
             props: {
                 post: this.post
             }
         })
         return createElement(
-           'v-flex', {'class': {'xs4': true}}, [postElem]
+           'v-flex', {'class': classes || {xs4: true}}, [postElem]
         )
     }
-    let makeTiles = (post) => {
-        let tiles = [makeTile(post)]
+    let makeTiles = (post, classes) => {
+        let tiles = [makeTile(post, classes)]
         if (post.children) {
             tiles = _.concat(tiles, _.map(makeTiles, post.children))
         }
         return tiles
     }
     if (this.post.children) {
-        let tiles = makeTiles(this.post)
-        return createElement('template', tiles)
+        let tiles = makeTiles(this.post, this.classes)
+        if (tiles.length == 1) return tiles[0]
+        if (tiles.legnth == 0) return null
+        return createElement('div', tiles)
     } else {
-        return makeTile(this.post)
+        return makeTile(this.post, this.classes)
     }
   }
 }

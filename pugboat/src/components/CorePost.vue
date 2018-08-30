@@ -1,10 +1,21 @@
 <template>
     <v-card :to="`/p/${this.post.address}`" flat tile>
       <template v-if="post.file">
-          <v-card-media contain v-if="isImage" :src="post.link" height="150px"/>
+          <v-card-media v-if="isImage" :src="post.link" height="150px"/>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
-      <!--div class="post-to">{{post.to}}</div-->
+      <v-card-title>
+        <div>
+          <v-btn small flat v-if="post.chainLevel == 0" :to="`/p/${this.post.to}`">
+            [ {{post.to}} ]
+          </v-btn>
+          <v-btn small flat v-else :to="`/p/${this.post.to}`">
+            [ parent ]
+          </v-btn>
+          <div v-if="post.responseCount">{{post.responseCount}} comments</div>
+          <div>received {{postedAt}}</div>
+        </div>
+      </v-card-title>
       <v-card-actions>
           <v-avatar>
               <avatar :user="post.signer" />
@@ -34,6 +45,7 @@ import {getGraphId} from '../mailbox.js'
 import VOTE from '../graphql/Vote.gql'
 import POST from '../graphql/PostFragment.gql'
 import _ from 'lodash'
+import moment from 'moment'
 
 export default {
   name: 'CorePost',
@@ -56,6 +68,9 @@ export default {
         let vote = this.$props.post.userVote
         if (!vote) return false
         return vote.karma == 1
+    },
+    postedAt() {
+        return moment(this.$props.post.receivedTimestamp).fromNow()
     },
   },
   methods: {

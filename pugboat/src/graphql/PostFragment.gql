@@ -6,6 +6,7 @@ fragment Post on PostNode {
     address
     karma
     chainLevel
+    receivedTimestamp
     file {
       content
       contentType

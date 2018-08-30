@@ -63,6 +63,7 @@ class IpfsFileNode(ObjectType):
 class PostNode(DjangoObjectType):
     file = Field(IpfsFileNode)
     user_vote = Field(VoteNode)
+    response_count = Int()
 
     class Meta:
         model = Post
@@ -99,6 +100,9 @@ class PostNode(DjangoObjectType):
             return None
         vote = Vote.objects.filter(post=self, user=user).first()
         return vote
+
+    def resolve_response_count(self, info, **kwargs):
+        return Post.objects.filter(to__startswith=self.address).count()
 
 
 class Query(ObjectType):
