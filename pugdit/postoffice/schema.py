@@ -62,7 +62,8 @@ class IpfsFileNode(ObjectType):
 
 class PostNode(DjangoObjectType):
     file = Field(IpfsFileNode)
-    #TODO votes
+    user_vote = Field(VoteNode)
+
     class Meta:
         model = Post
         filter_fields = {
@@ -91,6 +92,13 @@ class PostNode(DjangoObjectType):
         }
         #print('resolved file', r)
         return IpfsFileNode(**r)
+
+    def resolve_user_vote(self, info, **kwargs):
+        user = info.context.user
+        if not user.is_authenticated:
+            return None
+        vote = Vote.objects.filter(post=self, user=user).first()
+        return vote
 
 
 class Query(ObjectType):

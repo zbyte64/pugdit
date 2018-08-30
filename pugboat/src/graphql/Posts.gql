@@ -12,5 +12,8 @@ query posts($location: String) {
         contentType
         size
       }
+      userVote {
+        id, karma
+      }
   }}}
 }

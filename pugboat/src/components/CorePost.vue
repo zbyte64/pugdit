@@ -5,20 +5,23 @@
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
       <!--div class="post-to">{{post.to}}</div-->
-      <v-card-title>
-          <avatar :user="post.signer" />
-          <v-subheader>Karma: {{post.karma}}</v-subheader>
-      </v-card-title>
-      <!--div class="post-link">{{post.link}}</div-->
       <v-card-actions>
-          <v-btn flat icon color="blue lighten-2" @click.prevent="vote(1)">
-            <v-icon>thumb_up</v-icon>
-          </v-btn>
-          <v-btn flat icon color="red lighten-2" @click.prevent="vote(-1)">
+          <v-avatar>
+              <avatar :user="post.signer" />
+          </v-avatar>
+          <v-spacer/>
+          <v-btn icon color="red lighten-2" @click.prevent="vote(-1)">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <v-btn flat icon color="grey" :to="`/reply/${post.address}`">
-            Reply
+          <v-subheader color="grey">
+              {{post.karma}}
+          </v-subheader>
+            <v-btn icon color="blue lighten-2" @click.prevent="vote(1)">
+              <v-icon>thumb_up</v-icon>
+            </v-btn>
+          <v-spacer/>
+          <v-btn icon color="grey" :to="`/reply/${post.address}`">
+            <v-icon>reply</v-icon>
           </v-btn>
       </v-card-actions>
   </v-card>

@@ -1,11 +1,14 @@
 <template>
+  <v-layout column>
+      <Post :post="rootPost" v-if="rootPost !== null"/>
   <v-container fluid grid-list-sm>
       <v-layout row wrap>
           <template v-for="post in posts" v-if="!isLoading">
-              <Post :post="post" :key="post.id" />
+              <Post :post="post" :key="post.id" v-if="post.address !== location"/>
           </template>
       </v-layout>
   </v-container>
+  </v-layout>
 </template>
 
 <script>
@@ -23,16 +26,21 @@ export default {
     data() {
       return {
           isLoading: true,
-          posts: null
+          posts: null,
+          rootPost: null
       }
     },
     created() {
-        this.postTree().then(roots => {
-            this.posts = roots
-            this.isLoading = false
-        })
+        this.loadPosts()
     },
     methods: {
+        loadPosts() {
+            return this.postTree().then(roots => {
+                this.posts = roots
+                this.isLoading = false
+                this.rootPost = _.find(roots, {address: this.location})
+            })
+        },
         async postTree() {
           let results = await this.$apollo.query({
             query: POSTS,
@@ -68,10 +76,7 @@ export default {
     watch: {
         location: function() {
             this.isLoading = true
-            this.postTree().then(roots => {
-                this.posts = roots
-                this.isLoading = false
-            })
+            this.loadPosts()
         }
     }
 }

@@ -1,13 +1,14 @@
 <template>
-  <v-container>
-  <div class="location">
+  <v-layout column>
+  <v-flex>
       <v-text-field v-model="location" label="Location"/>
-  </div>
-  <div class="new-post" v-if="location">
-  <router-link :to="`/reply/${location}`" class="post-reply">
+  </v-flex>
+  <v-flex class="new-post" v-if="location">
+  <router-link :to="`/reply/${location}`">
     <v-btn>Post</v-btn>
   </router-link>
-  </div>
+  </v-flex>
+  <v-flex>
   <ApolloQuery
     :query="require('../graphql/FrontPosts.gql')"
     :variables="{location}"
@@ -16,7 +17,8 @@
       <Post :post="e.node" v-for="e of data.allPosts.edges" @click="viewPost(e.node)" :key="e.node.id"/>
   </v-layout>
   </ApolloQuery>
-  </v-container>
+  </v-flex>
+  </v-layout>
 </template>
 
 <script>
