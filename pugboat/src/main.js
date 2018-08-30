@@ -9,6 +9,7 @@ import wysiwyg from "vue-wysiwyg";
 import VueResource from 'vue-resource';
 import Cookies from 'js-cookie';
 import Gravatar from 'vue-gravatar';
+import './registerServiceWorker'
 
 Vue.use(VueResource);
 Vue.component('v-gravatar', Gravatar);
