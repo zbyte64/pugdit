@@ -147,7 +147,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    #'spa.middleware.SPAMiddleware',
+    'spa.middleware.SPAMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware', # early, but after Gzip
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -267,7 +267,7 @@ STATIC_ROOT = root('staticfiles')
 STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (root('static'),)
+STATICFILES_DIRS = (base('pugboat/dist'),)
 
 # Django SPA - simple setup for serving modern SPAs from Django
 # https://github.com/metakermit/django-spa
