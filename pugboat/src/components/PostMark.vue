@@ -18,9 +18,11 @@
 <script>
 import POST_MARK from '../graphql/PostMark.gql'
 import AUTH_SELF from '../graphql/AuthSelf.gql'
-import {sign, getGraphId} from '../mailbox.js'
+import REGISTER_IDENTITY from '../graphql/RegisterIdentity.gql'
+import {sign, getGraphId, LOCKER} from '../mailbox.js'
 import UploadButton from 'vuetify-upload-button';
 import msgpack from 'msgpack-lite'
+import _ from 'lodash'
 
 
 export default {
@@ -60,9 +62,9 @@ export default {
   methods: {
     async submit() {
         this.error = null
-        await this._submit().catch(error => {
+        await this._submit()/*.catch(error => {
             this.error = error
-        })
+        })*/
     },
     async _submit() {
         switch(this.$data.postType) {
@@ -117,7 +119,30 @@ export default {
         query: AUTH_SELF,
       })
       console.log(r)
-      return r.data.authUser.identities[0].id
+      if (!LOCKER) {
+          console.log("WTF")
+      }
+      let pk = LOCKER.getKey().publicKey
+      let ident = _.find(r.data.authUser.identities, {publicKey: pk})
+      if (!ident) {
+          ident = await this.registerIdentity()
+      }
+      return ident.id
+    },
+    async registerIdentity () {
+      let signed_username = LOCKER.signedUsername()
+      let public_key = LOCKER.getKey().publicKey
+      console.log('su', signed_username)
+      this.$data.key = public_key
+      let response = await this.$apollo.mutate({
+        mutation: REGISTER_IDENTITY,
+        variables: {
+            signedUsername: signed_username,
+            publicKey: public_key,
+        }
+      })
+      console.log('register response:', response)
+      return response.data.registerIdentity.identity
     }
   }
 }

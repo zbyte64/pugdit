@@ -1,5 +1,57 @@
 import nacl from 'tweetnacl';
+import SecureLS from 'secure-ls';
 
+
+class StorageLocker {
+  constructor(username, secretKey) {
+    this.username = username;
+    this.ls = new SecureLS({
+      encodingType: 'des',
+      encryptionSecret: secretKey,
+    });
+    this.lsKey = 'locker/' + this.username;
+  }
+
+  sign(payload) {
+    let kp = this.getKey();
+    console.log('sign', payload, kp.secretKey);
+    return nacl.sign(payload, decodeBase64(kp.secretKey));
+  }
+
+  getKey() {
+    let kp = this.ls.get(this.lsKey);
+    if (!_.isString(kp.secretKey) || !_.isString(kp.publicKey)) {
+      kp = this.generateKey();
+    }
+    if (!kp) kp = this.generateKey();
+    return kp;
+  }
+
+  generateKey() {
+    let keyPair = nacl.sign.keyPair();
+    return this.stashKey(keyPair);
+  }
+
+  stashKey(keyPair) {
+    let message = {
+      secretKey: encodeBase64(keyPair.secretKey),
+      publicKey: encodeBase64(keyPair.publicKey),
+    };
+    this.ls.set(this.lsKey, message);
+    return message;
+  }
+
+  signedUsername() {
+    return encodeBase64(this.sign(byteArray(this.username)));
+  }
+}
+
+export var LOCKER = null;
+
+export function setLockerAuth(username, storageKey) {
+  LOCKER = new StorageLocker(username, storageKey);
+  return LOCKER;
+}
 
 //string -> uint8 array
 function byteArray(x) {
@@ -25,45 +77,9 @@ export function decodeBase64(s) {
   return b;
 }
 
-export function newIdentity(username) {
-  let keyPair = getOrCreateKeyPair();
-  let payload = byteArray(username);
-  return {
-    'signed_username': encodeBase64(nacl.sign(payload, keyPair.secretKey)),
-    'public_key': encodeBase64(keyPair.publicKey),
-  };
-}
-
-export function getOrCreateKeyPair() {
-  let localStorage = window.localStorage;
-  let keyPair = localStorage.getItem('identity_key_pair');
-  try {
-    if (keyPair) {
-      keyPair = JSON.parse(keyPair);
-      keyPair.secretKey = decodeBase64(keyPair.secretKey);
-      keyPair.publicKey = decodeBase64(keyPair.publicKey);
-    }
-  } catch(e) {
-    //pass
-  }
-  if (!keyPair || !keyPair.secretKey) {
-    keyPair = nacl.sign.keyPair();
-    localStorage.setItem('identity_key_pair', JSON.stringify({
-      secretKey: encodeBase64(keyPair.secretKey),
-      publicKey: encodeBase64(keyPair.publicKey),
-    }));
-  }
-  return keyPair;
-}
-
-export function loadKey() {
-  return getOrCreateKeyPair()['secretKey'];
-}
-
 export function sign(message) {
-  let key = loadKey();
   let payload = message; //byteArray(message);
-  let b = nacl.sign(payload, key);
+  let b = LOCKER.sign(payload);
   return encodeBase64(b);
 }
 

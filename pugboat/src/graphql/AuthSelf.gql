@@ -3,5 +3,6 @@ query authSelf {
     id, username, firstName, lastName, email, isStaff, isActive, identities {
       id, publicKey
     }
+    storageKey
   }
 }

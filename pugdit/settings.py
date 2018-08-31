@@ -18,6 +18,7 @@ env = environ.Env( # set default values and casting
     DEPLOYMENT=(str, 'prod'),
     SECRET_KEY=(str, 'h4@c1x9okapu5^#iurp21i(vn14s5c#1lqx!$k-#^v%rd#rn!b'),
     SITE_ID=(int, 1),
+    REQUIRE_SSL=(bool, False),
 )
 
 # Build paths inside the project like this: base('desired/local/path')
@@ -163,7 +164,7 @@ ROOT_URLCONF = 'pugdit.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [root('templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -220,7 +221,7 @@ if DEPLOYMENT == 'dev':
     #CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
     ADMINS = (('admin', 'admin@localhost'),)
 else: # DEPLOYMENT == prod
-    # SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = env('REQUIRE_SSL')
     # add extra apps
     # INSTALLED_APPS.append('raven.contrib.django.raven_compat')
     pass
@@ -323,7 +324,14 @@ TEST_RUNNER = 'snapshottest.django.TestRunner'
 
 
 # https://github.com/ipfs/notes/issues/15
-SERVICE_BLOCKNAME = 'TODO'
+SERVICE_BLOCKNAME = 'QmSiF2Fna3srBzgmvJxB2URBBg7KgxpxDZ9rbHxoXVL5HH'
 IPFS_URL = env('IPFS_URL')
 IPFS_API = env('IPFS_API')
 SITE_ID = env('SITE_ID')
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+if env('REQUIRE_SSL'):
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'

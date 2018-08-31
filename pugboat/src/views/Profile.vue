@@ -50,7 +50,7 @@
 <script>
 import REGISTER_IDENTITY from '../graphql/RegisterIdentity.gql'
 import LOGIN from '../graphql/Login.gql'
-import {newIdentity, loadKey} from '../mailbox.js';
+import {setLockerAuth, LOCKER} from '../mailbox.js';
 
 export default {
     data() {

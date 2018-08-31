@@ -26,7 +26,7 @@ client = get_client()
 trucking_pool = eventlet.GreenPool(20)
 SERVICE_CREED = b'pugdit net 1'
 #TODO precompute without storing
-SERVICE_BLOCKNAME = None
+SERVICE_BLOCKNAME = 'QmSiF2Fna3srBzgmvJxB2URBBg7KgxpxDZ9rbHxoXVL5HH'
 
 def find_advertised_peers():
     return client.dht_findprovs(SERVICE_BLOCKNAME)
@@ -37,6 +37,7 @@ def put_advertisement():
     result = client.block_put(io.BytesIO(SERVICE_CREED))
     global SERVICE_BLOCKNAME
     SERVICE_BLOCKNAME = result['Key']
+    print('SERVICE_BLOCKNAME:', SERVICE_BLOCKNAME)
 
 
 def make_fingerprint(public_key):

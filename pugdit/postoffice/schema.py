@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
 from django.conf import settings
+from django.core.signing import Signer
 from base64 import standard_b64decode, standard_b64encode
 import requests
 
@@ -37,12 +38,19 @@ class IdentityNode(DjangoObjectType):
 
 class AuthUserNode(DjangoObjectType):
     identities = List(IdentityNode)
+    storage_key = String()
+
     class Meta:
         model = User
 
     def resolve_identities(self, info, **kwargs):
-        print(self, info, kwargs)
         return self.identity_set.all()
+
+    def resolve_storage_key(self, info, **kwargs):
+        signer = Signer()
+        #TODO do the right thing
+        payload = ''.join([self.username, self.password])
+        return signer.sign(payload)
 
 
 class VoteNode(DjangoObjectType):
