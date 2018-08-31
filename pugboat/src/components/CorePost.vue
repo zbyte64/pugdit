@@ -1,7 +1,9 @@
 <template>
     <v-card :to="`/p/${this.post.address}`" flat tile>
       <template v-if="post.file">
-          <v-card-media v-if="isImage" :src="post.link" height="150px"/>
+          <a v-if="isImage" :href="post.link" target="_blank">
+            <v-card-media contain :src="post.link" :height="activeImgHeight"/>
+          </a>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
       <v-card-title>
@@ -62,6 +64,11 @@ export default {
   },
   components: {
     Avatar
+  },
+  data() {
+    return {
+        activeImgHeight: 150,
+    }
   },
   computed: {
     isImage() {

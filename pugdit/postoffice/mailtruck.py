@@ -25,8 +25,7 @@ def get_client():
 client = get_client()
 trucking_pool = eventlet.GreenPool(20)
 SERVICE_CREED = b'pugdit net 1'
-#TODO precompute without storing
-SERVICE_BLOCKNAME = 'QmSiF2Fna3srBzgmvJxB2URBBg7KgxpxDZ9rbHxoXVL5HH'
+SERVICE_BLOCKNAME = settings.SERVICE_BLOCKNAME
 
 def find_advertised_peers():
     return client.dht_findprovs(SERVICE_BLOCKNAME)
