@@ -135,6 +135,8 @@ def test_peer(peer):
     if not peer['Responses']:
         return
     peer_id = peer['ID']
+    if not peer_id:
+        return
     if peer_id == client.id()['ID']:
         return
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
@@ -143,34 +145,36 @@ def test_peer(peer):
         try:
             mani = retrieve_manifest(node)
         except (ValueError, StatusError, ErrorResponse, AssertionError) as error:
-            logger.exception(error)
+            logger.warning(str(error))
             return
         else:
-            record_manifest(mani, node)
-            node.karma = 1
-            node.save()
+            if mani:
+                record_manifest(mani, node)
+                node.karma = 1
+                node.save()
     return node
 
 
 def drive_route():
-    nodes = Nexus.objects.filter(karma__gte=0, is_banned=False)
+    nodes = Nexus.objects.filter(karma__gte=-10, is_banned=False)
     return trucking_pool.imap(receive_node, nodes)
 
 
 def receive_node(node):
     try:
         mani = retrieve_manifest(node)
-    except ErrorResponse as error:
-        logger.exception(error)
-        return
-    except (ValueError, StatusError, AssertionError) as error:
-        logger.warning(error)
+    except (ValueError, ErrorResponse, StatusError, AssertionError) as error:
+        logger.warning(str(error))
         if node.karma < 100:
             node.karma -= 1
             node.save()
         return
     else:
-        record_manifest(mani, node)
+        if mani:
+            record_manifest(mani, node)
+            if node.karma < 0:
+                node.karma += 1
+                node.save()
 
 
 def publish_manifest():
