@@ -44,6 +44,20 @@ def make_fingerprint(public_key):
     return s.hexdigest()
 
 
+def store_filepath(filepath):
+    '''
+    Stores a file with it's filename
+    Returns the dagnode of the file with a `Path` key
+    '''
+    add_results = client.add(filepath, wrap_with_directory=True)
+    print('add_results:', add_results)
+    path = [o['Name'] or o['Hash'] for o in add_results]
+    ipfs_path = '/ipfs/' + '/'.join(reversed(path))
+    add_result = add_results[0]
+    add_result['Path'] = ipfs_path
+    return add_result
+
+
 def retrieve_manifest(node):
     logger.info('retrieving manifest: %s' % node.peer_id)
     robj = client.name_resolve(name=node.peer_id)
@@ -124,16 +138,16 @@ def test_peer(peer):
     if peer_id == client.id()['ID']:
         return
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
-        defaults={'is_banned': True})
+        defaults={'karma': -1})
     if created:
         try:
             mani = retrieve_manifest(node)
         except (ValueError, StatusError, ErrorResponse, AssertionError) as error:
             logger.exception(error)
-            return #banned
+            return
         else:
             record_manifest(mani, node)
-            node.is_banned = False
+            node.karma = 1
             node.save()
     return node
 
@@ -187,10 +201,8 @@ def publish_manifest():
     with tempfile.TemporaryDirectory() as tmpdirname:
         mani_path = os.path.join(tmpdirname, 'manifest.mp')
         open(mani_path, 'wb').write(raw_mani)
-        #TODO dont assume the first is our file
-        #TODO get_path_from_add
-        add_result = client.add(mani_path, wrap_with_directory=True)[0]
-    ipfs_path = '/ipfs/' + add_result['Hash']
+        add_result = store_filepath(mani_path)
+    ipfs_path = add_result['Path']
     client.name_publish(ipfs_path)
 
 

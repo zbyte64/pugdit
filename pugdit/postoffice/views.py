@@ -5,7 +5,7 @@ import tempfile
 import json
 import os
 from .models import Asset
-from .mailtruck import client
+from .mailtruck import client, store_filepath
 
 
 @login_required
@@ -42,13 +42,8 @@ def pin_asset(upload, filename, user):
                     destination.write(chunk)
             else:
                 destination.write(upload)
-        #TODO don't assume first is the file, make path instead
-        add_results = client.add(destination_path, wrap_with_directory=True)
-        print('add_results:', add_results)
-        path = [o['Name'] or o['Hash'] for o in add_results]
-        ipfs_path = '/ipfs/' + '/'.join(reversed(path))
-        add_result = add_results[0]
-    print(add_result)
+        add_result = store_filepath(destination_path)
+        ipfs_path = add_result['Path']
     asset, _c = Asset.objects.get_or_create(ipfs_hash=add_result['Hash'])
     asset.users.add(user)
     #TODO add paths

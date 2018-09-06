@@ -10,12 +10,15 @@ Policies work to optimize the "mail route" to weed out bad actors and favor node
 
 To get started with development, use docker compose:
 
-    docker-compose up
+    docker-compose build
+    docker-compose create
+    docker-compose start
     docker-compose run cli migrate
-    docker-compose run createsuperuser
+    docker-compose run cli createsuperuser
+    docker-compose run cli mailcarrier
 
 
-While the docker service is running, also run the yarn dev service:
+While the docker web service is running, also run the yarn dev service:
 
     cd pugboat
     yarn serve
