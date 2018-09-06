@@ -3,7 +3,8 @@ from .models import Nexus, Identity, Post
 
 
 class NexusAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['peer_id', 'last_manifest_path', 'is_banned', 'karma']
+    list_filter = ['is_banned']
 admin.site.register(Nexus, NexusAdmin)
 
 

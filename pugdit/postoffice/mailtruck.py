@@ -36,7 +36,7 @@ def put_advertisement():
     result = client.block_put(io.BytesIO(SERVICE_CREED))
     global SERVICE_BLOCKNAME
     SERVICE_BLOCKNAME = result['Key']
-    print('SERVICE_BLOCKNAME:', SERVICE_BLOCKNAME)
+    logger.info('SERVICE_BLOCKNAME: %s' % SERVICE_BLOCKNAME)
 
 
 def make_fingerprint(public_key):
@@ -50,7 +50,7 @@ def store_filepath(filepath):
     Returns the dagnode of the file with a `Path` key
     '''
     add_results = client.add(filepath, wrap_with_directory=True)
-    print('add_results:', add_results)
+    logger.debug('add_results: %s' % add_results)
     path = [o['Name'] or o['Hash'] for o in add_results]
     ipfs_path = '/ipfs/' + '/'.join(reversed(path))
     add_result = add_results[0]
@@ -59,7 +59,7 @@ def store_filepath(filepath):
 
 
 def retrieve_manifest(node):
-    logger.info('retrieving manifest: %s' % node.peer_id)
+    logger.info('[%s] retrieving manifest' % node.peer_id)
     robj = client.name_resolve(name=node.peer_id)
     if node.last_manifest_path == robj['Path']:
         return False
@@ -101,6 +101,8 @@ def parse_manifest(raw_manifest):
 
 
 def record_manifest(mani, node=None):
+    if node:
+        logger.info('[%s] recording manifest' % node.peer_id)
     for env_proto in mani['posts']:
         ident = env_prot['identity']
         try:
@@ -114,19 +116,21 @@ def record_manifest(mani, node=None):
         else:
             if not identity.policy_accept_new_post():
                 continue
-        envelope = Post.objects.get_or_create(
+        envelope, _c = Post.objects.get_or_create(
             to=env_proto['to'],
             link=env_proto['link'],
             signer=identity,
             signature=env_proto['signature'],
-        )[0]
+        )
         if node:
             envelope.transmitted_nodes.add(node)
+        if _c:
+            logger.debug('new post: %s' % envelope)
 
 
 def explore_new_routes():
     peers = find_advertised_peers()
-    logger.debug('found peers: %s' % peers)
+    logger.debug('found peers: %s' % len(peers))
     #async manifest updates
     return trucking_pool.imap(test_peer, peers)
 
@@ -145,7 +149,7 @@ def test_peer(peer):
         try:
             mani = retrieve_manifest(node)
         except (ValueError, StatusError, ErrorResponse, AssertionError) as error:
-            logger.warning(str(error))
+            logger.warning('[%s] %s' % (peer_id, error))
             return
         else:
             if mani:
@@ -164,7 +168,7 @@ def receive_node(node):
     try:
         mani = retrieve_manifest(node)
     except (ValueError, ErrorResponse, StatusError, AssertionError) as error:
-        logger.warning(str(error))
+        logger.warning('[%s] %s' % (node.peer_id, error))
         if node.karma < 100:
             node.karma -= 1
             node.save()
@@ -201,13 +205,14 @@ def publish_manifest():
             ident
         ))
     raw_mani = umsgpack.packb(mani)
-    logging.info('writing manifest')
+    our_id = client.id()['ID']
+    logging.info('writing manifest to: %s' % our_id)
     with tempfile.TemporaryDirectory() as tmpdirname:
         mani_path = os.path.join(tmpdirname, 'manifest.mp')
         open(mani_path, 'wb').write(raw_mani)
         add_result = store_filepath(mani_path)
     ipfs_path = add_result['Path']
-    client.name_publish(ipfs_path)
+    client.name_publish(ipfs_path, lifetime="5m")
 
 
 def mail_route():
