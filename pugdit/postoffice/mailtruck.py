@@ -5,6 +5,7 @@ from django.conf import settings
 import nacl.utils
 from nacl.encoding import Base64Encoder as KeyEncoder
 from nacl.signing import SigningKey, VerifyKey
+from base64 import b64encode, b64decode
 import hashlib
 import umsgpack
 import datetime
@@ -68,17 +69,20 @@ def store_filepath(filepath):
 
 
 def retrieve_manifest(node):
-    logger.info('[%s] retrieving manifest' % node.peer_id)
+    logger.info('[%s] retrieve manifest' % node.peer_id)
     # no penalty for not resolving?
     robj = client.name_resolve(name=node.peer_id)
-    if node.last_manifest_path == robj['Path']:
+    path = robj['Path']
+    logger.info('[%s] resolved: %s' % (node.peer_id, path))
+    assert path.endswith('manifest.mp'), 'Not a manifset file'
+    if node.last_manifest_path == path:
         pass
         #return False
     else:
         #TODO update after sync?
-        node.last_manifest_path = robj['Path']
+        node.last_manifest_path = path
         node.save()
-    response = requests.get(settings.IPFS_URL + robj['Path'])
+    response = requests.get(settings.IPFS_URL + path)
     response.raise_for_status()
     raw_mani = response.content
     return parse_manifest(raw_mani)
@@ -90,6 +94,10 @@ def parse_manifest(raw_manifest):
     assert isinstance(mani, dict), 'Manifeset is not a dictionary'
     assert isinstance(mani['identities'], list), 'Manifset is missing identities'
     assert isinstance(mani['posts'], list), 'Manifset is missing posts'
+    return transform_manifest(mani)
+
+#TODO better name, creates a linked manifset with key objects
+def transform_manifest(mani):
     identities = dict()
     posts = list()
     manifest = {
@@ -98,34 +106,36 @@ def parse_manifest(raw_manifest):
     }
     for key, pk in enumerate(mani['identities']):
         ident = {
-            'public_key': b64encode(pk),
-            'verify_key': VerifyKey(pk),
+            'public_key': pk, #b64encode(pk),
+            'verify_key': VerifyKey(b64decode(pk)),
         }
         identities[key] = ident
     for (smessage, ident_index) in mani['posts']:
         identity = identities[ident_index]
         vk = identity['verify_key']
-        to, link = umsgpack.unpackb(vk.verify(smessage))
+        mpacked = vk.verify(b64decode(smessage))
+        to, link = umsgpack.unpackb(mpacked)
         posts.append({
             'to': to,
             'link': link,
-            'signature': b64encode(smessage),
+            'signature': smessage,
             'identity': identity,
         })
-    return mani
+    return manifest
 
 
 def record_manifest(mani, node=None):
     if node:
         logger.info('[%s] recording manifest' % node.peer_id)
     for env_proto in mani['posts']:
-        ident = env_prot['identity']
+        ident = env_proto['identity']
+        #TODO optimize call based on node policy
         try:
-            identity = Identity.object.get(public_key=ident['public_key'])
+            identity = Identity.objects.get(public_key=ident['public_key'])
         except Identity.DoesNotExist:
             if node and not node.policy_accept_new_identity():
                 continue
-            identity = Indentity.objects.create(
+            identity = Identity.objects.create(
                 public_key=ident['public_key']
             )
         else:
@@ -138,7 +148,7 @@ def record_manifest(mani, node=None):
             signature=env_proto['signature'],
         )
         if node:
-            envelope.transmitted_nodes.add(node)
+            envelope.transmitted_nexus.add(node)
         if _c:
             logger.debug('new post: %s' % envelope)
 
@@ -164,7 +174,7 @@ def knock_knock_node(node):
     except (ValueError, AssertionError) as error:
         log_fail(error, node.peer_id)
         return False, 'BAD_MANIFEST'
-    except (requests.exceptions.HttpError) as error:
+    except (requests.exceptions.HTTPError) as error:
         #TODO
         log_fail(error, node.peer_id)
         return False, 'UNAVAILABLE'
@@ -208,7 +218,7 @@ def receive_node(node):
             node.karma += 1
             node.save()
     elif code == 'BAD_MANIFEST':
-        node.karma -= 1
+        node.karma -= 2
         node.save()
 
 

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .mailtruck import parse_manifest, mail_route
+from .mailtruck import parse_manifest, mail_route, record_manifest, transform_manifest
 import umsgpack
 
 
@@ -13,6 +13,10 @@ class DeliveryTestCase(TestCase):
     def test_parse_manifest(self):
         payload = umsgpack.packb(TEST_MANIFEST_FIXTURE)
         mani = parse_manifest(payload)
+        assert mani
+
+    def test_record_manifest(self):
+        record_manifest(transform_manifest(TEST_MANIFEST_FIXTURE))
 
     def test_mail_route(self):
         mail_route()

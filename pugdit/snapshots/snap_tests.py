@@ -13,7 +13,7 @@ snapshots['APITestCase::test_register_identity 1'] = {
             '__typename': 'RegisterIdentityMutationPayload',
             'identity': {
                 '__typename': 'IdentityNode',
-                'id': 'SWRlbnRpdHlOb2RlOjE=',
+                'id': 'SWRlbnRpdHlOb2RlOjI=',
                 'karma': 0,
                 'publicKey': '+mVYLVA8J3NcXDj/366os5MaIvjLJH5ujXBb/kUl/GM='
             }
@@ -27,12 +27,12 @@ snapshots['APITestCase::test_register_identity 2'] = {
             '__typename': 'PostMarkMutationPayload',
             'post': {
                 '__typename': 'PostNode',
-                'id': 'UG9zdE5vZGU6MQ==',
+                'id': 'UG9zdE5vZGU6Mg==',
                 'link': '/ipfs/Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD',
                 'signature': 'oqBEJ6SzLRoHjFkQAom4ptDOhNGDrOjTFHv7aCmSM94YJLvjGjw6DYm0rFxdAzwp21YUCWvAahJWXsY8H0x4DJKlaGVsbG/ZNC9pcGZzL1FtZjQxMmpRWml1VlV0ZGduQjM2RlhGWDd4ZzVWNktFYlNKNGRwUXVoa0x5ZkQ=',
                 'signer': {
                     '__typename': 'IdentityNode',
-                    'id': 'SWRlbnRpdHlOb2RlOjE='
+                    'id': 'SWRlbnRpdHlOb2RlOjI='
                 },
                 'to': 'hello'
             }

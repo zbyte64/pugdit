@@ -72,8 +72,8 @@ class Nexus(models.Model):
     @lru_cache()
     def _message_health_stats(self):
         return self.transmitted_posts.all().aggregate(
-            volume=Count('id'),
-            avg_karma=Avg('karma'),
+            volume=models.Count('id'),
+            avg_karma=models.Avg('karma'),
         )
 
     def policy_accept_new_identity(self):
@@ -82,7 +82,9 @@ class Nexus(models.Model):
         if self.karma > 100:
             return True
         stats = self._message_health_stats()
-        if state['avg_karma'] > .5:
+        if not stats['volume']:
+            return True
+        if stats['avg_karma'] > .5:
             return True
         if stats['avg_karma'] + self.karma < 0:
             return False
