@@ -12,6 +12,7 @@ import io
 import logging
 import tempfile
 import os
+import requests
 
 from .models import Post, Identity, Nexus
 
@@ -43,8 +44,7 @@ def find_advertised_peers():
 def put_advertisement():
     #should hash to: settings.SERVICE_BLOCKNAME
     result = client.block_put(io.BytesIO(SERVICE_CREED))
-    global SERVICE_BLOCKNAME
-    SERVICE_BLOCKNAME = result['Key']
+    assert SERVICE_BLOCKNAME == result['Key']
     logger.info('SERVICE_BLOCKNAME: %s' % SERVICE_BLOCKNAME)
 
 
@@ -78,7 +78,9 @@ def retrieve_manifest(node):
         #TODO update after sync?
         node.last_manifest_path = robj['Path']
         node.save()
-    raw_mani = client.cat(robj['Path']) #penalty
+    response = requests.get(settings.IPFS_URL + robj['Path'])
+    response.raise_for_status()
+    raw_mani = response.content
     return parse_manifest(raw_mani)
 
 
@@ -162,6 +164,10 @@ def knock_knock_node(node):
     except (ValueError, AssertionError) as error:
         log_fail(error, node.peer_id)
         return False, 'BAD_MANIFEST'
+    except (requests.exceptions.HttpError) as error:
+        #TODO
+        log_fail(error, node.peer_id)
+        return False, 'UNAVAILABLE'
     else:
         if mani:
             record_manifest(mani, node)
