@@ -18,6 +18,15 @@ from .models import Post, Identity, Nexus
 logger = logging.getLogger(__name__)
 
 
+def log_fail(error, prefix=None):
+    if hasattr(error, 'original'):
+        if hasattr(error.original, 'response'):
+            error = error.original.response.json()
+    if prefix:
+        logger.warning('[%s] %s' % (prefix, error))
+    else:
+        logger.warning(str(error))
+
 def get_client():
     #TODO url read: settings.IPFS_API
     return ipfsapi.connect('ipfs', 5001)
@@ -60,21 +69,25 @@ def store_filepath(filepath):
 
 def retrieve_manifest(node):
     logger.info('[%s] retrieving manifest' % node.peer_id)
+    # no penalty for not resolving?
     robj = client.name_resolve(name=node.peer_id)
     if node.last_manifest_path == robj['Path']:
-        return False
-    node.last_manifest_path = robj['Path']
-    node.save()
-    raw_mani = client.cat(robj['Path'])
+        pass
+        #return False
+    else:
+        #TODO update after sync?
+        node.last_manifest_path = robj['Path']
+        node.save()
+    raw_mani = client.cat(robj['Path']) #penalty
     return parse_manifest(raw_mani)
 
 
 def parse_manifest(raw_manifest):
     mani = umsgpack.unpackb(raw_manifest)
     logger.debug('read manifest: %s' % mani)
-    assert isinstance(mani, dict)
-    assert isinstance(mani['identities'], list)
-    assert isinstance(mani['posts'], list)
+    assert isinstance(mani, dict), 'Manifeset is not a dictionary'
+    assert isinstance(mani['identities'], list), 'Manifset is missing identities'
+    assert isinstance(mani['posts'], list), 'Manifset is missing posts'
     identities = dict()
     posts = list()
     manifest = {
@@ -132,7 +145,28 @@ def explore_new_routes():
     peers = find_advertised_peers()
     logger.debug('found peers: %s' % len(peers))
     #async manifest updates
-    return trucking_pool.imap(test_peer, peers)
+    return list(trucking_pool.imap(test_peer, peers))
+
+
+def knock_knock_node(node):
+    try:
+        mani = retrieve_manifest(node)
+    except StatusError as error:
+        log_fail(error, node.peer_id)
+        reason = error.original.response.json().get('Message')
+        if reason == 'could not resolve name':
+            return False, "UNAVAILABLE"
+        elif reason == 'this dag node is a directory':
+            return False, 'BAD_MANIFEST'
+        return False, "UNAVAILABLE"
+    except (ValueError, AssertionError) as error:
+        log_fail(error, node.peer_id)
+        return False, 'BAD_MANIFEST'
+    else:
+        if mani:
+            record_manifest(mani, node)
+            return True, ''
+        return False, 'BAD_MANIFEST'
 
 
 def test_peer(peer):
@@ -146,39 +180,30 @@ def test_peer(peer):
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
         defaults={'karma': -1})
     if created:
-        try:
-            mani = retrieve_manifest(node)
-        except (ValueError, StatusError, ErrorResponse, AssertionError) as error:
-            logger.warning('[%s] %s' % (peer_id, error))
-            return
-        else:
-            if mani:
-                record_manifest(mani, node)
-                node.karma = 1
-                node.save()
+        success, code = knock_knock_node(node)
+        if success:
+            node.karma = 1
+            node.save()
+        elif code == 'BAD_MANIFEST':
+            node.is_banned = True
+            node.save()
     return node
 
 
 def drive_route():
     nodes = Nexus.objects.filter(karma__gte=-10, is_banned=False)
-    return trucking_pool.imap(receive_node, nodes)
+    return list(trucking_pool.imap(receive_node, nodes))
 
 
 def receive_node(node):
-    try:
-        mani = retrieve_manifest(node)
-    except (ValueError, ErrorResponse, StatusError, AssertionError) as error:
-        logger.warning('[%s] %s' % (node.peer_id, error))
-        if node.karma < 100:
-            node.karma -= 1
+    success, code = knock_knock_node(node)
+    if success:
+        if node.karma < 10:
+            node.karma += 1
             node.save()
-        return
-    else:
-        if mani:
-            record_manifest(mani, node)
-            if node.karma < 0:
-                node.karma += 1
-                node.save()
+    elif code == 'BAD_MANIFEST':
+        node.karma -= 1
+        node.save()
 
 
 def publish_manifest():
@@ -212,7 +237,10 @@ def publish_manifest():
         open(mani_path, 'wb').write(raw_mani)
         add_result = store_filepath(mani_path)
     ipfs_path = add_result['Path']
-    client.name_publish(ipfs_path, lifetime="5m")
+    try:
+        client.name_publish(ipfs_path, lifetime="1h")
+    except ErrorResponse as error:
+        log_fail(error)
 
 
 def mail_route():
