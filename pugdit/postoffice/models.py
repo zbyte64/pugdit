@@ -79,6 +79,8 @@ class Nexus(models.Model):
     def policy_accept_new_identity(self):
         if self.karma < -10:
             return False
+        return True
+        #TODO
         if self.karma > 100:
             return True
         stats = self._message_health_stats()
@@ -136,6 +138,11 @@ class Post(models.Model):
     def verify(self):
         self.signer.verify(b64decode(self.signature))
 
+    def pin(self):
+        from .mailtruck import client
+        res = client.pin_add(self.link)
+        self.is_pinned = True
+        return res
 
 
 class Vote(models.Model):

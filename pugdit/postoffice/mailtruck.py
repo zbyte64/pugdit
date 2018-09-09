@@ -140,12 +140,14 @@ def record_manifest(mani, node=None):
             identity = Identity.objects.get(public_key=ident['public_key'])
         except Identity.DoesNotExist:
             if node and not node.policy_accept_new_identity():
+                logger.warn('identity rejected')
                 continue
             identity = Identity.objects.create(
                 public_key=ident['public_key']
             )
         else:
             if not identity.policy_accept_new_post():
+                logger.warn('post rejected')
                 continue
         envelope, _c = Post.objects.get_or_create(
             to=env_proto['to'],
@@ -156,6 +158,9 @@ def record_manifest(mani, node=None):
         if node:
             envelope.transmitted_nexus.add(node)
         if _c:
+            post.clean()
+            post.pin()
+            post.save()
             logger.debug('new post: %s' % envelope)
 
 
@@ -243,7 +248,7 @@ def receive_node(node):
 def publish_manifest():
     #publish the best most recent posts
     posts = Post.objects.order_by('-received_timestamp')
-    posts = posts.filter(karma__gte=-100)
+    posts = posts.filter(karma__gte=-100, is_pinned=True)
     posts = posts[:1000]
     mani = {
         'posts': [], #(signed_message, ident_index)
@@ -279,7 +284,7 @@ def publish_manifest():
 
 def mail_route():
     put_advertisement()
+    publish_manifest()
     drive_route()
     explore_new_routes()
     trucking_pool.waitall()
-    publish_manifest()

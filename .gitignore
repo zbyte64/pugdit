@@ -44,7 +44,7 @@ coverage/
 staticfiles
 /Procfile.dev
 tmp
-.env
+/.env
 
 celerybeat-schedule
 dump.rdb

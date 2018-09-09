@@ -30,11 +30,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         put_advertisement()
+        if options['publish']:
+            publish_manifest()
         if options['route']:
             drive_route()
         if options['explore']:
             explore_new_routes()
         trucking_pool.waitall()
-        if options['publish']:
-            publish_manifest()
         #self.stdout.write(self.style.SUCCESS('Successfully closed poll "%s"' % poll_id))
