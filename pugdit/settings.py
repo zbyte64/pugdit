@@ -19,6 +19,7 @@ env = environ.Env( # set default values and casting
     SECRET_KEY=(str, 'h4@c1x9okapu5^#iurp21i(vn14s5c#1lqx!$k-#^v%rd#rn!b'),
     SITE_ID=(int, 1),
     REQUIRE_SSL=(bool, False),
+    TRUCK_FLEET_SIZE=(int, 10),
 )
 
 # Build paths inside the project like this: base('desired/local/path')
@@ -325,6 +326,7 @@ TEST_RUNNER = 'snapshottest.django.TestRunner'
 
 # https://github.com/ipfs/notes/issues/15
 SERVICE_BLOCKNAME = 'QmSiF2Fna3srBzgmvJxB2URBBg7KgxpxDZ9rbHxoXVL5HH'
+TRUCK_FLEET_SIZE = env('TRUCK_FLEET_SIZE')
 IPFS_URL = env('IPFS_URL')
 IPFS_API = env('IPFS_API')
 SITE_ID = env('SITE_ID')

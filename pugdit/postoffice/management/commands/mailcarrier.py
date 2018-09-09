@@ -20,10 +20,18 @@ class Command(BaseCommand):
             default=True,
             help='Skip exploring new routes',
         )
+        parser.add_argument(
+            '--skip-route',
+            action='store_false',
+            dest='route',
+            default=True,
+            help='Skip previous routes',
+        )
 
     def handle(self, *args, **options):
         put_advertisement()
-        drive_route()
+        if options['route']:
+            drive_route()
         if options['explore']:
             explore_new_routes()
         trucking_pool.waitall()

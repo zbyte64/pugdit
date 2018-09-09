@@ -2,6 +2,7 @@ import eventlet
 import ipfsapi
 from ipfsapi.exceptions import ErrorResponse, StatusError
 from django.conf import settings
+from django.db import close_old_connections
 import nacl.utils
 from nacl.encoding import Base64Encoder as KeyEncoder
 from nacl.signing import SigningKey, VerifyKey
@@ -34,12 +35,17 @@ def get_client():
     return ipfsapi.connect('ipfs', 5001)
 
 client = get_client()
-trucking_pool = eventlet.GreenPool(20)
+trucking_pool = eventlet.GreenPool(settings.TRUCK_FLEET_SIZE)
 SERVICE_CREED = b'pugdit net 1'
 SERVICE_BLOCKNAME = settings.SERVICE_BLOCKNAME
 
+
 def find_advertised_peers():
-    return client.dht_findprovs(SERVICE_BLOCKNAME)
+    lines = client.dht_findprovs(SERVICE_BLOCKNAME)
+    for line in filter(lambda x: x.get('Type') == 4, lines):
+        for r in (line['Responses'] or []):
+            if r['Addrs']:
+                yield r
 
 
 def put_advertisement():
@@ -74,7 +80,7 @@ def retrieve_manifest(node):
     robj = client.name_resolve(name=node.peer_id)
     path = robj['Path']
     logger.info('[%s] resolved: %s' % (node.peer_id, path))
-    assert path.endswith('manifest.mp'), 'Not a manifset file'
+    assert path.endswith('manifest.mp'), 'Not a manifest file'
     if node.last_manifest_path == path:
         pass
         #return False
@@ -91,9 +97,9 @@ def retrieve_manifest(node):
 def parse_manifest(raw_manifest):
     mani = umsgpack.unpackb(raw_manifest)
     logger.debug('read manifest: %s' % mani)
-    assert isinstance(mani, dict), 'Manifeset is not a dictionary'
-    assert isinstance(mani['identities'], list), 'Manifset is missing identities'
-    assert isinstance(mani['posts'], list), 'Manifset is missing posts'
+    assert isinstance(mani, dict), 'Manifest is not a dictionary'
+    assert isinstance(mani['identities'], list), 'Manifest is missing identities'
+    assert isinstance(mani['posts'], list), 'Manifest is missing posts'
     return transform_manifest(mani)
 
 #TODO better name, creates a linked manifset with key objects
@@ -153,13 +159,6 @@ def record_manifest(mani, node=None):
             logger.debug('new post: %s' % envelope)
 
 
-def explore_new_routes():
-    peers = find_advertised_peers()
-    logger.debug('found peers: %s' % len(peers))
-    #async manifest updates
-    return list(trucking_pool.imap(test_peer, peers))
-
-
 def knock_knock_node(node):
     try:
         mani = retrieve_manifest(node)
@@ -167,7 +166,7 @@ def knock_knock_node(node):
         log_fail(error, node.peer_id)
         reason = error.original.response.json().get('Message')
         if reason == 'could not resolve name':
-            return False, "UNAVAILABLE"
+            return False, "NOT_PUBLISHED"
         elif reason == 'this dag node is a directory':
             return False, 'BAD_MANIFEST'
         return False, "UNAVAILABLE"
@@ -186,29 +185,45 @@ def knock_knock_node(node):
 
 
 def test_peer(peer):
-    if not peer['Responses']:
-        return
     peer_id = peer['ID']
     if not peer_id:
         return
     if peer_id == client.id()['ID']:
         return
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
-        defaults={'karma': -1})
+        defaults={'is_banned': True})
     if created:
         success, code = knock_knock_node(node)
         if success:
             node.karma = 1
+            node.is_banned = False
             node.save()
-        elif code == 'BAD_MANIFEST':
-            node.is_banned = True
+        elif code == 'UNAVAILABLE':
+            node.is_banned = False
+            node.karma = -1
             node.save()
     return node
 
 
+def clean_exec(fn):
+    def foo(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            close_old_connections()
+    return foo
+
+
+def explore_new_routes():
+    peers = list(find_advertised_peers())
+    logger.debug('found peers: %s' % len(peers))
+    #async manifest updates
+    return list(trucking_pool.imap(clean_exec(test_peer), peers))
+
+
 def drive_route():
     nodes = Nexus.objects.filter(karma__gte=-10, is_banned=False)
-    return list(trucking_pool.imap(receive_node, nodes))
+    return list(trucking_pool.imap(clean_exec(receive_node), nodes))
 
 
 def receive_node(node):
@@ -220,12 +235,15 @@ def receive_node(node):
     elif code == 'BAD_MANIFEST':
         node.karma -= 2
         node.save()
+    elif code == 'NOT_PUBLISHED':
+        node.karma -= 1
+        node.save()
 
 
 def publish_manifest():
-    cutoff = datetime.datetime.today() - datetime.timedelta(days=7)
+    #publish the best most recent posts
     posts = Post.objects.order_by('-received_timestamp')
-    posts = posts.filter(received_timestamp__gte=cutoff, karma__gte=-100)
+    posts = posts.filter(karma__gte=-100)
     posts = posts[:1000]
     mani = {
         'posts': [], #(signed_message, ident_index)
