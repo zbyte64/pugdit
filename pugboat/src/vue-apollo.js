@@ -12,7 +12,7 @@ const CACHE = new InMemoryCache()
 const AUTH_TOKEN = 'apollo-token'
 
 // Http endpoint
-const httpEndpoint = process.env.VUE_APP_GRAPHQL_HTTP || 'http://localhost:8081/graphql/'
+const httpEndpoint = process.env.VUE_APP_GRAPHQL_HTTP || '/graphql/'
 // Files URL root
 export const filesRoot = process.env.VUE_APP_FILES_ROOT || httpEndpoint.substr(0, httpEndpoint.indexOf('/graphql'))
 
@@ -62,9 +62,6 @@ export function createProvider (options = {}) {
     ...options,
   })
   apolloClient.wsClient = wsClient
-
-  console.log('ac', apolloClient)
-  console.log(defaultOptions)
 
   // Create vue apollo provider
   const apolloProvider = new VueApollo({

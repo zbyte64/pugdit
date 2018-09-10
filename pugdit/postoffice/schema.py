@@ -86,6 +86,8 @@ class PostNode(DjangoObjectType):
         interfaces = (Node, )
 
     def resolve_file(self, info, **kwargs):
+        if not self.is_pinned:
+            return None
         response = requests.get(settings.IPFS_URL + self.link)
         h = response.headers
         if h['Content-Type'].startswith('text'):
