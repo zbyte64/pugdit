@@ -13,6 +13,17 @@ class IdentityAdmin(admin.ModelAdmin):
 admin.site.register(Identity, IdentityAdmin)
 
 
+def make_pinned(modeladmin, request, queryset):
+    #TODO do as a task
+    for post in queryset:
+        post.clean()
+        post.pin()
+        post.save()
+make_pinned.short_description = 'Pin selected posts'
+
+
 class PostAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['address', 'karma', 'is_pinned']
+    list_filter = ['is_pinned', 'received_timestamp']
+    actions = [make_pinned]
 admin.site.register(Post, PostAdmin)

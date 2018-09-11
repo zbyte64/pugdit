@@ -149,19 +149,19 @@ def record_manifest(mani, node=None):
             if not identity.policy_accept_new_post():
                 logger.warn('post rejected')
                 continue
-        envelope, _c = Post.objects.get_or_create(
+        post, _c = Post.objects.get_or_create(
             to=env_proto['to'],
             link=env_proto['link'],
             signer=identity,
             signature=env_proto['signature'],
         )
         if node:
-            envelope.transmitted_nexus.add(node)
+            post.transmitted_nexus.add(node)
         if _c:
             post.clean()
             post.pin()
             post.save()
-            logger.debug('new post: %s' % envelope)
+            logger.debug('new post: %s' % post)
 
 
 def knock_knock_node(node):
