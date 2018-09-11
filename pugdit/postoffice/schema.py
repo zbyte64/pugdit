@@ -183,6 +183,9 @@ class RegisterIdentityMutation(DjangoModelFormMutation):
 
     @classmethod
     def perform_mutate(cls, form, info):
+        onfile = Identity.objects.filter(public_key=form.cleaned_data['public_key']).first()
+        if onfile:
+            return cls(errors=[], identity=onfile)
         obj = form.save()
         print('identity saved:', obj)
         return cls(errors=[], identity=obj)
