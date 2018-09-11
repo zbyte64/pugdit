@@ -190,23 +190,32 @@ def knock_knock_node(node):
 
 
 def test_peer(peer):
+    logger.info('Testing peer: %s' % peer)
     peer_id = peer['ID']
     if not peer_id:
+        logger.warn('Peer entry has no ID')
         return
     if peer_id == client.id()['ID']:
+        logger.warn('Peer is ourself')
         return
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
         defaults={'is_banned': True})
     if created:
         success, code = knock_knock_node(node)
         if success:
+            logger.info('Adding peer')
             node.karma = 1
             node.is_banned = False
             node.save()
         elif code == 'UNAVAILABLE':
+            logger.warn('Peer unavailable for test')
             node.is_banned = False
             node.karma = -1
             node.save()
+        else:
+            logger.warn('Banning peer')
+    else:
+        logger.info('Peer already known')
     return node
 
 
