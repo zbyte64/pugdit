@@ -45,6 +45,12 @@ class PostMarkForm(forms.ModelForm):
             raise forms.ValidationError(str(error))
         return cleaned_data
 
+    def save(self):
+        obj = super(PostMarkForm, self).save(commit=False)
+        obj.pin()
+        obj.save()
+        return obj
+
 
 class RegisterIdentityForm(forms.ModelForm):
     public_key = forms.CharField(max_length=77)
