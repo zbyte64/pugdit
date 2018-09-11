@@ -31,6 +31,7 @@ services:
       IPFS_URL: http://ipfs:8080
       WEB_WORKER: eventlet
       DEBUG: "true"
+      ACCOUNT_EMAIL_VERIFICATION: "none"
     volumes:
       - ./pugdit:/code/pugdit
     ports:
