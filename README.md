@@ -30,6 +30,7 @@ While the docker web service is running, also run the yarn dev service:
 ### Folders
 
 **pugboat** Vue client
+
 **pugdit** Django server
 
 The vue client is served as a SPA by Django. API calls are made using GraphQL.
