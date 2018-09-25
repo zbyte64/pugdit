@@ -8,7 +8,6 @@
       </v-layout>
       </v-slide-y-transition>
   </v-container>
-  </v-layout>
 </template>
 
 <script>

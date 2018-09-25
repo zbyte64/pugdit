@@ -1,5 +1,6 @@
 import nacl from 'tweetnacl';
 import SecureLS from 'secure-ls';
+import _ from 'lodash';
 
 
 class StorageLocker {
@@ -56,13 +57,6 @@ export function setLockerAuth(username, storageKey) {
 //string -> uint8 array
 function byteArray(x) {
   return new TextEncoder().encode(x);
-}
-
-//unit8 array -> hex
-function encodeHex(x) {
-  return x.reduce(function(memo, i) {
-    return memo + ('0' + i.toString(16)).slice(-2); //padd with leading 0 if <16
-  }, '');
 }
 
 function encodeBase64(arr) {
