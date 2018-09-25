@@ -50,6 +50,7 @@ A node may associate multiple identities to a single account, representing diffe
 
 A post is comprised of a `to` address and an IPFS `link`. 
 A signed post is a message packed tuple of those values signed by an identity.
+To display a post nicely, they are formatted as rfc2822.
 
 
 ### Manifests
