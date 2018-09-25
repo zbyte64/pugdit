@@ -8,6 +8,8 @@ fragment Post on PostNode {
     chainLevel
     receivedTimestamp
     file {
+      subject
+      image
       content
       contentType
       size

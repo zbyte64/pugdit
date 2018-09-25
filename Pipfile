@@ -11,6 +11,8 @@ Django = "==2.0.4"
 "django-backblazeb2-storage" = "*"
 django-environ = "*"
 django-extensions = "*"
+#django-moderation = "*"
+django-moderation = { git = "https://github.com/zbyte64/django-moderation.git" , ref = "02bfa5e" }
 django-revproxy = "==0.9.15"
 ipython = "*"
 ipdb = "*"

@@ -18,7 +18,7 @@ from .forms import PostMarkForm, RegisterIdentityForm, VoteForm
 class NexusNode(DjangoObjectType):
     class Meta:
         model = Nexus
-        filter_fields = ['karma', 'is_banned']
+        filter_fields = ['karma', 'is_public']
         interfaces = (Node, )
 
 
@@ -27,7 +27,7 @@ class IdentityNode(DjangoObjectType):
 
     class Meta:
         model = Identity
-        filter_fields = ['karma', 'is_banned', 'owner']
+        filter_fields = ['karma', 'is_public', 'owner']
         interfaces = (Node, )
 
     def resolve_email(self, info, **kwargs):
@@ -59,9 +59,11 @@ class VoteNode(DjangoObjectType):
         interfaces = (Node, )
 
 
-class IpfsFileNode(ObjectType):
+class PostPayloadNode(ObjectType):
     content_type = String()
     content = String()
+    subject = String()
+    image = String()
     size = Int()
 
     class Meta:
@@ -69,7 +71,7 @@ class IpfsFileNode(ObjectType):
 
 
 class PostNode(DjangoObjectType):
-    file = Field(IpfsFileNode)
+    file = Field(PostPayloadNode)
     user_vote = Field(VoteNode)
     response_count = Int()
 
@@ -90,19 +92,27 @@ class PostNode(DjangoObjectType):
             return None
         response = requests.get(settings.IPFS_URL + self.link)
         h = response.headers
-        if h['Content-Type'].startswith('text'):
+        ct = h['Content-Type']
+        r = {
+            'size': h['Content-Length'],
+            'content_type': h['Content-Type']
+        }
+        if ct == 'message/rfc822' or self.link.endswith('.eml'):
+            from email import message_from_string
+            msg = message_from_string(response.text)
+            c = msg.get_payload()
+            r['subject'] = msg.get('Subject')
+            r['image'] = msg.get('Image')
+            #r['From'] = msg.get('From')
+        elif ct.startswith('text'):
             c = response.text
             c = c[:1024*10] #TODO specify max client message length
         else:
             c = None #only transmit text
             #c = standard_b64encode(response.content).decode('utf8')
-        r = {
-            'content': c,
-            'size': h['Content-Length'],
-            'content_type': h['Content-Type']
-        }
+        r['content'] = c
         #print('resolved file', r)
-        return IpfsFileNode(**r)
+        return PostPayloadNode(**r)
 
     def resolve_user_vote(self, info, **kwargs):
         user = info.context.user

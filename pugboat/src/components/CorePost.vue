@@ -4,10 +4,14 @@
           <a v-if="isImage" :href="post.link" target="_blank">
             <v-card-media contain :src="post.link" :height="activeImgHeight"/>
           </a>
+          <a v-if="post.file.image" :href="post.file.image" target="_blank">
+            <v-card-media contain :src="post.file.image" :height="activeImgHeight"/>
+          </a>
           <v-card-text v-else v-html="this.sanitize(post.file.content)"/>
       </template>
-      <v-card-title>
+      <v-card-title primary-title>
         <div>
+          <h3 class="headline">{{subject}}</h3>
           <v-btn small flat v-if="post.chainLevel == 0" :to="`/p/${this.post.to}`">
             [ {{post.to}} ]
           </v-btn>
@@ -87,6 +91,10 @@ export default {
     postedAt() {
         return moment(this.$props.post.receivedTimestamp).fromNow()
     },
+    subject() {
+      if (!this.post.file) return ''
+      return this.post.file.subject
+    }
   },
   methods: {
       async vote(karma) {

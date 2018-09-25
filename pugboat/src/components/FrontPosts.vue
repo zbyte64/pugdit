@@ -3,39 +3,41 @@
   <v-flex>
       <v-text-field v-model="location" label="Location"/>
   </v-flex>
-  <ApolloQuery
-    :query="require('../graphql/AuthSelf.gql')"
-  >
-    <div slot-scope="{ result: { data } }">
-      <template v-if="data && data.authUser">
-          <v-flex class="new-post" v-if="location">
-              <router-link :to="`/reply/${location}`">
-                <v-btn>Post</v-btn>
-              </router-link>
-          </v-flex>
-      </template>
-    </div>
-  </ApolloQuery>
+  <div v-if="authUser">
+      <v-flex class="new-post" v-if="location">
+          <router-link :to="`/reply/${location}`">
+            <v-btn>Post</v-btn>
+          </router-link>
+      </v-flex>
+  </div>
   <v-flex>
-  <ApolloQuery
-    :query="require('../graphql/FrontPosts.gql')"
-    :variables="{location}"
-  >
-    <v-layout slot-scope="{ result: { data } }" v-if="data">
-      <Post :post="e.node" v-for="e of data.allPosts.edges" @click="viewPost(e.node)" :key="e.node.id"/>
-  </v-layout>
-  </ApolloQuery>
+    <v-layout v-if="posts">
+      <Post :post="post" v-for="post in posts" @click="viewPost(post)" :key="post.id"/>
+    </v-layout>
   </v-flex>
   </v-layout>
 </template>
 
 <script>
 import Post from './Post.vue'
+import AUTH_SELF from '../graphql/AuthSelf.gql'
+import FRONT_POSTS from '../graphql/FrontPosts.gql'
 
 export default {
   name: 'FrontPosts',
   components: {
-      Post,
+    Post,
+  },
+  apollo: {
+    authUser: AUTH_SELF,
+    allPosts: {
+      query: FRONT_POSTS,
+      variables() {
+        return {
+          location: this.location
+        }
+      }
+    }
   },
   data () {
     return {
@@ -43,6 +45,10 @@ export default {
     }
   },
   computed: {
+      posts() {
+          if (!this.allPosts) return []
+          return this.allPosts.edges.map(x => x.node)
+      }
   },
   methods: {
       viewPost(post) {

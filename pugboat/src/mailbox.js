@@ -86,3 +86,15 @@ export function sign(message) {
 export function getGraphId(bytes) {
   return Buffer.from(bytes, 'base64').toString('ascii').split(':')[1];
 }
+
+export function buildRFC822(tuples, payload) {
+  let msg = []
+  for (let index in tuples) {
+    let key = tuples[index][0]
+    let value = tuples[index][1].replace('\r\n', '')
+    msg.push(`${key}: ${value}`)
+  }
+  msg.push('\r\n')
+  msg.push(payload)
+  return msg.join('\r\n')
+}

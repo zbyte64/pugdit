@@ -17,7 +17,7 @@ from functools import lru_cache
 class Identity(models.Model):
     public_key = models.CharField(max_length=77, unique=True, help_text="Base64 encoded key for verifying signatures")
     karma = models.IntegerField(default=0)
-    is_banned = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -49,7 +49,7 @@ class Identity(models.Model):
     def policy_accept_new_post(self):
         if self.karma < -100:
             return False
-        return True
+        return self.is_public
 
     @property
     def verify_key(self):
@@ -62,9 +62,14 @@ class Identity(models.Model):
 class Nexus(models.Model):
     peer_id = models.CharField(max_length=46, help_text='IPFS identity of the node')
     karma = models.IntegerField(default=0)
-    is_banned = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     last_manifest_path = models.CharField(max_length=255, blank=True)
     last_sync = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+    )
 
     def __str__(self):
         return self.peer_id
@@ -79,7 +84,7 @@ class Nexus(models.Model):
     def policy_accept_new_identity(self):
         if self.karma < -10:
             return False
-        return True
+        return self.is_public
         #TODO
         if self.karma > 100:
             return True
@@ -106,6 +111,7 @@ class Post(models.Model):
     transmitted_nexus = models.ManyToManyField(Nexus, blank=True,
         related_name='transmitted_posts', help_text='Nexus(es) that have transmitted this message')
     is_pinned = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     karma = models.IntegerField(default=0)
     chain_level = models.SmallIntegerField(default=0, db_index=True)
     address = models.CharField(max_length=576, db_index=True, blank=True)

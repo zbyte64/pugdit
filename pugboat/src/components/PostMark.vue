@@ -3,13 +3,20 @@
     <v-alert type="error" :value="error&&1">{{error}}</v-alert>
     <v-radio-group v-model="postType">
       <v-radio label="Compose" value="newPost"/>
-      <v-radio label="Image" value="newImage"/>
       <v-radio label="Link" value="link"/>
     </v-radio-group>
-    <wysiwyg v-model="newMessage" v-if="postType == 'newPost'"/>
-    <v-text-field v-model="link" v-if="postType == 'link'" label="existing IPFS link"/>
-    <upload-btn :fileChangedCallback="uploadImage" v-if="postType == 'newImage'"></upload-btn>
-    <v-btn
+    <v-text-field v-model="subject" label="Subject"/>
+    <div v-if="postType == 'newPost'">
+        <v-label>Optional Image</v-label>
+        <div v-if="imageLink">currently: {{imageLink}}</div>
+        <upload-btn accept="image/png, image/jpeg, image/gif"
+            :fileChangedCallback="uploadImage"></upload-btn>
+        <wysiwyg v-model="newMessage"/>
+    </div>
+    <div v-if="postType == 'link'">
+        <v-text-field v-model="link" label="URL link"/>
+    </div>
+    <v-btn :active="formValid"
       @click="formValid && submit()"
     >Upload</v-btn>
   </div>
@@ -19,7 +26,7 @@
 import POST_MARK from '../graphql/PostMark.gql'
 import AUTH_SELF from '../graphql/AuthSelf.gql'
 import REGISTER_IDENTITY from '../graphql/RegisterIdentity.gql'
-import {sign, getGraphId, LOCKER} from '../mailbox.js'
+import {sign, getGraphId, LOCKER, buildRFC822} from '../mailbox.js'
 import UploadButton from 'vuetify-upload-button';
 import msgpack from 'msgpack-lite'
 import _ from 'lodash'
@@ -31,28 +38,23 @@ export default {
   },
   components: {
     'upload-btn': UploadButton
-},
+  },
   data () {
     return {
       postType: 'newPost',
+      subject: '',
       newMessage: '',
+      imageLink: null,
       link: '',
       signature: '',
       error: null,
     }
   },
-
-  apollo: {
-    postMark: POST_MARK,
-  },
-
   computed: {
     formValid () {
       switch(this.$data.postType) {
         case 'newPost':
-          return this.newMessage
-        case 'newImage':
-          return this.link
+          return this.newMessage && this.subject
         case 'link':
           return this.link
       }
@@ -70,8 +72,6 @@ export default {
         switch(this.$data.postType) {
           case 'newPost':
             return await this.uploadMessage()
-          case 'newImage':
-            return await this.postMarkLink(this.link)
           case 'link':
             return await this.postMarkLink(this.link)
         }
@@ -81,13 +81,18 @@ export default {
         var formData = new FormData();
         formData.append('file', e);
         let response = await this.$http.post('/api/add-asset/', formData)
-        let link = response.data
-        await this.postMarkLink(link)
+        this.imageLink = response.data
     },
     async uploadMessage () {
       if (!this.formValid) return
-      //TODO indicate mimetype
-      let response = await this.$http.post('/api/add-asset/', {filename: 'post', content:this.$data.newMessage})
+      let headers = [
+          ['Subject', this.subject],
+      ]
+      if (this.imageLink) {
+          headers.push(['Image', this.imageLink])
+      }
+      let content = buildRFC822(headers, this.newMessage)
+      let response = await this.$http.post('/api/add-asset/', {filename: 'post.eml', content})
       let link = response.data
       await this.postMarkLink(link)
     },

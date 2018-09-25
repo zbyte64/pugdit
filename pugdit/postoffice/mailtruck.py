@@ -199,17 +199,17 @@ def test_peer(peer):
         logger.warn('Peer is ourself')
         return
     node, created = Nexus.objects.get_or_create(peer_id=peer_id,
-        defaults={'is_banned': True})
+        defaults={'is_public': False})
     if created:
         success, code = knock_knock_node(node)
         if success:
             logger.info('Adding peer')
             node.karma = 1
-            node.is_banned = False
+            node.is_public = True
             node.save()
         elif code == 'UNAVAILABLE':
             logger.warn('Peer unavailable for test')
-            node.is_banned = False
+            node.is_public = True
             node.karma = -1
             node.save()
         else:
@@ -236,7 +236,7 @@ def explore_new_routes():
 
 
 def drive_route():
-    nodes = Nexus.objects.filter(karma__gte=-10, is_banned=False)
+    nodes = Nexus.objects.filter(karma__gte=-10, is_public=True)
     return list(trucking_pool.imap(clean_exec(receive_node), nodes))
 
 
@@ -257,7 +257,7 @@ def receive_node(node):
 def publish_manifest():
     #publish the best most recent posts
     posts = Post.objects.order_by('-received_timestamp')
-    posts = posts.filter(karma__gte=-100, is_pinned=True)
+    posts = posts.filter(karma__gte=-100, is_pinned=True, is_public=True)
     posts = posts[:1000]
     mani = {
         'posts': [], #(signed_message, ident_index)
